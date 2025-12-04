@@ -159,11 +159,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'Orders or Products app not available: {e}'))
             return []
 
-        # Get seller users
-        sellers = [u for u in users if 'seller' in u.email.lower()]
+        # Get seller users from all users (not just newly created)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        sellers = list(User.objects.filter(email__icontains='seller'))
+
         if not sellers:
             self.stdout.write(self.style.WARNING('No sellers found, skipping order creation'))
             return []
+
+        self.stdout.write(f'Found {len(sellers)} sellers')
 
         # Get products
         products = list(Product.objects.all()[:50])
@@ -203,6 +208,101 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(orders)} orders'))
         return orders
 
+    def create_delivery_assignments(self, orders, users):
+        """Create delivery assignments with pending confirmations."""
+        self.stdout.write('\n' + '='*70)
+        self.stdout.write(self.style.SUCCESS('Creating Delivery Assignments'))
+        self.stdout.write('='*70 + '\n')
+
+        # Import delivery models
+        try:
+            from delivery.models import DeliveryRecord, OrderAssignment
+        except ImportError as e:
+            self.stdout.write(self.style.WARNING(f'Delivery app not available: {e}'))
+            return []
+
+        # Get delivery agents from all users (not just newly created)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        delivery_agents = list(User.objects.filter(email__icontains='delivery_agent'))
+
+        if not delivery_agents:
+            self.stdout.write(self.style.WARNING('No delivery agents found, skipping delivery assignments'))
+            return []
+
+        self.stdout.write(f'Found {len(delivery_agents)} delivery agents')
+
+        # Select orders that are ready for delivery
+        deliverable_orders = [o for o in orders if o.status in ['shipped', 'packaged']]
+        if not deliverable_orders:
+            self.stdout.write(self.style.WARNING('No deliverable orders found'))
+            return []
+
+        deliveries = []
+        delivery_statuses = ['assigned', 'picked_up', 'out_for_delivery', 'delivered']
+        manager_confirmation_statuses = ['pending', 'confirmed', 'rejected', None]
+
+        # Get or create a delivery company and couriers
+        from delivery.models import DeliveryCompany, Courier
+        company, _ = DeliveryCompany.objects.get_or_create(
+            name_en="Test Delivery Co",
+            defaults={
+                'name_ar': 'شركة التوصيل',
+                'base_cost': Decimal('25.00'),
+                'is_active': True
+            }
+        )
+
+        for order in deliverable_orders[:min(len(deliverable_orders), 10)]:
+            agent = random.choice(delivery_agents)
+
+            # Create or get courier for this agent
+            courier, _ = Courier.objects.get_or_create(
+                user=agent,
+                defaults={
+                    'delivery_company': company,
+                    'phone_number': agent.phone_number or '+971501234567',
+                    'status': 'active',
+                    'availability': 'available'
+                }
+            )
+
+            # Create delivery record
+            try:
+                status = random.choice(delivery_statuses)
+                manager_status = random.choice(manager_confirmation_statuses) if status == 'delivered' else None
+
+                delivery = DeliveryRecord.objects.create(
+                    order=order,
+                    delivery_company=company,
+                    courier=courier,
+                    tracking_number=f"TRK{order.order_code}-{random.randint(1000, 9999)}",
+                    status=status,
+                    manager_confirmation_status=manager_status,
+                    delivery_notes=f"Test delivery for order {order.order_code}",
+                    assigned_at=timezone.now() - timedelta(days=random.randint(0, 5)),
+                    estimated_delivery_time=timezone.now() + timedelta(days=random.randint(1, 3))
+                )
+
+                # If status is delivered, set delivered_at
+                if status == 'delivered':
+                    delivery.delivered_at = timezone.now() - timedelta(days=random.randint(0, 2))
+                    delivery.save()
+
+                deliveries.append(delivery)
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f'Could not create delivery for order {order.order_code}: {e}'))
+                continue
+
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(deliveries)} delivery records'))
+
+        # Count pending confirmations
+        pending_count = len([d for d in deliveries if d.manager_confirmation_status == 'pending'])
+        if pending_count > 0:
+            self.stdout.write(self.style.WARNING(f'   Including {pending_count} deliveries with pending manager confirmation'))
+
+        return deliveries
+
     def handle(self, *args, **options):
         users_per_role = options['users']
         orders_count = options['orders']
@@ -218,6 +318,7 @@ class Command(BaseCommand):
         # Create test data
         users = self.create_users(users_per_role)
         orders = self.create_orders(orders_count, users)
+        deliveries = self.create_delivery_assignments(orders, users)
 
         # Summary
         self.stdout.write('\n' + '='*70)
@@ -225,5 +326,6 @@ class Command(BaseCommand):
         self.stdout.write('='*70)
         self.stdout.write(f'\n✓ Users created: {len(users)}')
         self.stdout.write(f'✓ Orders created: {len(orders)}')
+        self.stdout.write(f'✓ Delivery assignments created: {len(deliveries)}')
         self.stdout.write(self.style.WARNING(f'\n⚠️  Default password for all test users: {self.generate_password()}'))
         self.stdout.write('\n' + '='*70 + '\n')
