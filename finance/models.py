@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from decimal import Decimal
 import uuid
 
 User = get_user_model()
@@ -45,8 +46,8 @@ class Payment(models.Model):
     customer_phone = models.CharField(max_length=20, blank=True)
     
     # Payment processing details
-    processor_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    net_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    processor_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    net_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=3, default='AED')
     
     # Payment verification

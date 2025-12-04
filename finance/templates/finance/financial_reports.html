@@ -163,13 +163,34 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% if revenue_analysis %}
                             {% for data in revenue_analysis %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.date }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.orders }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">AED {{ data.revenue|floatformat:2 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">AED {{ data.fees|floatformat:2 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">AED {{ data.total|floatformat:2 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">AED {{ data.avg_order|floatformat:2 }}</td>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{% url 'finance:order_management' %}?date={{ data.date }}"
+                                       class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+                                        {{ data.date }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{% url 'finance:order_management' %}?date={{ data.date }}"
+                                       class="text-blue-600 hover:text-blue-800 hover:underline">
+                                        {{ data.orders }} <span class="text-gray-500">orders</span>
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{% url 'finance:order_management' %}?date={{ data.date }}"
+                                       class="text-green-600 hover:text-green-800 hover:underline font-medium">
+                                        AED {{ data.revenue|floatformat:2 }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    AED {{ data.fees|floatformat:2 }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    AED {{ data.total|floatformat:2 }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    AED {{ data.avg_order|floatformat:2 }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.top_seller }}</td>
                             </tr>
                             {% endfor %}
@@ -191,22 +212,30 @@
                 <h3 class="text-lg font-semibold text-orange-600">Summary Metrics</h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="text-center">
+                <a href="{% url 'finance:payment_management' %}"
+                   class="block text-center hover:bg-orange-50 rounded-lg p-4 transition-all hover:shadow-md">
                     <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-                    <p class="text-2xl font-bold text-orange-600">AED {{ total_revenue|floatformat:2 }}</p>
-                </div>
-                <div class="text-center">
+                    <p class="text-2xl font-bold text-orange-600 hover:text-orange-700">AED {{ total_revenue|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Click to view payments →</p>
+                </a>
+                <a href="{% url 'finance:order_management' %}"
+                   class="block text-center hover:bg-blue-50 rounded-lg p-4 transition-all hover:shadow-md">
                     <p class="text-sm font-medium text-gray-500">Total Orders</p>
-                    <p class="text-2xl font-bold text-blue-600">{{ total_orders }}</p>
-                </div>
-                <div class="text-center">
+                    <p class="text-2xl font-bold text-blue-600 hover:text-blue-700">{{ total_orders }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Click to view orders →</p>
+                </a>
+                <a href="{% url 'finance:order_management' %}"
+                   class="block text-center hover:bg-green-50 rounded-lg p-4 transition-all hover:shadow-md">
                     <p class="text-sm font-medium text-gray-500">Average Order</p>
-                    <p class="text-2xl font-bold text-green-600">AED {{ avg_order_value|floatformat:2 }}</p>
-                </div>
-                <div class="text-center">
+                    <p class="text-2xl font-bold text-green-600 hover:text-green-700">AED {{ avg_order_value|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">View all orders →</p>
+                </a>
+                <a href="{% url 'finance:fees' %}"
+                   class="block text-center hover:bg-purple-50 rounded-lg p-4 transition-all hover:shadow-md">
                     <p class="text-sm font-medium text-gray-500">Total Fees</p>
-                    <p class="text-2xl font-bold text-purple-600">AED {{ total_fees_amount|floatformat:2 }}</p>
-                </div>
+                    <p class="text-2xl font-bold text-purple-600 hover:text-purple-700">AED {{ total_fees_amount|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Manage fees →</p>
+                </a>
             </div>
             <div class="mt-4 text-center">
                 <p class="text-sm text-gray-500">Real data from database | Last updated: {{ "now"|date:"F d, Y H:i" }}</p>
