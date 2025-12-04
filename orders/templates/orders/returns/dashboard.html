@@ -1,0 +1,23 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Returns Dashboard" %}</title>
+</head>
+<body>
+    <h1>{% trans "Returns Management Dashboard" %}</h1>
+    <div class="stats">
+        <p>Total Returns: {{ stats.total_returns }}</p>
+        <p>Pending: {{ stats.pending }}</p>
+        <p>Approved: {{ stats.approved }}</p>
+    </div>
+    <div class="returns-list">
+        {% for return in returns %}
+            <div class="return-item">
+                <span class="return-code">{{ return.return_code }}</span>
+                <span class="status">{{ return.return_status }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

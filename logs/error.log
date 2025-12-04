@@ -1,0 +1,12 @@
+[2025-12-02 10:46:55 +0000] [3203821] [INFO] Starting gunicorn 23.0.0
+[2025-12-02 10:46:55 +0000] [3203821] [ERROR] Connection in use: ('0.0.0.0', 8070)
+[2025-12-02 10:46:55 +0000] [3203821] [ERROR] connection to ('0.0.0.0', 8070) failed: [Errno 98] Address already in use
+[2025-12-02 10:46:56 +0000] [3203821] [ERROR] Connection in use: ('0.0.0.0', 8070)
+[2025-12-02 10:46:56 +0000] [3203821] [ERROR] connection to ('0.0.0.0', 8070) failed: [Errno 98] Address already in use
+[2025-12-02 10:46:57 +0000] [3203821] [ERROR] Connection in use: ('0.0.0.0', 8070)
+[2025-12-02 10:46:57 +0000] [3203821] [ERROR] connection to ('0.0.0.0', 8070) failed: [Errno 98] Address already in use
+[2025-12-02 10:46:58 +0000] [3203821] [ERROR] Connection in use: ('0.0.0.0', 8070)
+[2025-12-02 10:46:58 +0000] [3203821] [ERROR] connection to ('0.0.0.0', 8070) failed: [Errno 98] Address already in use
+[2025-12-02 10:46:59 +0000] [3203821] [ERROR] Connection in use: ('0.0.0.0', 8070)
+[2025-12-02 10:46:59 +0000] [3203821] [ERROR] connection to ('0.0.0.0', 8070) failed: [Errno 98] Address already in use
+[2025-12-02 10:47:00 +0000] [3203821] [ERROR] Can't connect to ('0.0.0.0', 8070)

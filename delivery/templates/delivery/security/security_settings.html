@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Security Settings" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-gray-600">
+            <li><a href="{% url 'delivery:delivery_list' %}" class="hover:text-blue-600">{% trans "Deliveries" %}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">{% trans "Security Settings" %}</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Security Settings" %}</h1>
+                <p class="text-gray-600">{% trans "Configure security parameters for the delivery system" %}</p>
+            </div>
+            <div class="flex-shrink-0">
+                <svg class="w-16 h-16 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Form -->
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">{{ form.non_field_errors }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- OTP Settings Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center mb-6">
+                <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-semibold text-gray-900">{% trans "OTP Settings" %}</h2>
+                    <p class="text-sm text-gray-600">{% trans "Configure One-Time Password parameters" %}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- OTP Expiry Minutes -->
+                <div>
+                    <label for="{{ form.otp_expiry_minutes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.otp_expiry_minutes.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.otp_expiry_minutes }}
+                    {% if form.otp_expiry_minutes.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.otp_expiry_minutes.help_text }}</p>
+                    {% endif %}
+                    {% if form.otp_expiry_minutes.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.otp_expiry_minutes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- OTP Max Attempts -->
+                <div>
+                    <label for="{{ form.otp_max_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.otp_max_attempts.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.otp_max_attempts }}
+                    {% if form.otp_max_attempts.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.otp_max_attempts.help_text }}</p>
+                    {% endif %}
+                    {% if form.otp_max_attempts.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.otp_max_attempts.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- OTP Delivery Channel -->
+                <div>
+                    <label for="{{ form.otp_delivery_channel.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.otp_delivery_channel.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.otp_delivery_channel }}
+                    {% if form.otp_delivery_channel.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.otp_delivery_channel.help_text }}</p>
+                    {% endif %}
+                    {% if form.otp_delivery_channel.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.otp_delivery_channel.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- OTP Length -->
+                <div>
+                    <label for="{{ form.otp_length.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.otp_length.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.otp_length }}
+                    {% if form.otp_length.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.otp_length.help_text }}</p>
+                    {% endif %}
+                    {% if form.otp_length.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.otp_length.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PIN Settings Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center mb-6">
+                <div class="flex-shrink-0 bg-purple-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-semibold text-gray-900">{% trans "PIN Settings" %}</h2>
+                    <p class="text-sm text-gray-600">{% trans "Configure Personal Identification Number parameters" %}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- PIN Validity Hours -->
+                <div>
+                    <label for="{{ form.pin_validity_hours.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pin_validity_hours.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.pin_validity_hours }}
+                    {% if form.pin_validity_hours.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.pin_validity_hours.help_text }}</p>
+                    {% endif %}
+                    {% if form.pin_validity_hours.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pin_validity_hours.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- PIN Max Attempts -->
+                <div>
+                    <label for="{{ form.pin_max_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pin_max_attempts.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.pin_max_attempts }}
+                    {% if form.pin_max_attempts.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.pin_max_attempts.help_text }}</p>
+                    {% endif %}
+                    {% if form.pin_max_attempts.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pin_max_attempts.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- PIN Length -->
+                <div>
+                    <label for="{{ form.pin_length.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.pin_length.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.pin_length }}
+                    {% if form.pin_length.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.pin_length.help_text }}</p>
+                    {% endif %}
+                    {% if form.pin_length.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pin_length.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- PIN Auto Generate -->
+                <div class="flex items-center h-full pt-8">
+                    <div class="flex items-center">
+                        {{ form.pin_auto_generate }}
+                        <label for="{{ form.pin_auto_generate.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            {{ form.pin_auto_generate.label }}
+                        </label>
+                    </div>
+                    {% if form.pin_auto_generate.help_text %}
+                    <p class="ml-2 text-xs text-gray-500">{{ form.pin_auto_generate.help_text }}</p>
+                    {% endif %}
+                    {% if form.pin_auto_generate.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.pin_auto_generate.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Geofence Settings Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center mb-6">
+                <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-semibold text-gray-900">{% trans "Geofence Settings" %}</h2>
+                    <p class="text-sm text-gray-600">{% trans "Configure geographic boundary parameters" %}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Default Geofence Radius -->
+                <div>
+                    <label for="{{ form.default_geofence_radius.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.default_geofence_radius.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.default_geofence_radius }}
+                    {% if form.default_geofence_radius.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.default_geofence_radius.help_text }}</p>
+                    {% endif %}
+                    {% if form.default_geofence_radius.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.default_geofence_radius.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Geofence Tolerance -->
+                <div>
+                    <label for="{{ form.geofence_tolerance.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.geofence_tolerance.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.geofence_tolerance }}
+                    {% if form.geofence_tolerance.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.geofence_tolerance.help_text }}</p>
+                    {% endif %}
+                    {% if form.geofence_tolerance.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.geofence_tolerance.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Geofence Auto Activate -->
+                <div class="flex items-center h-full pt-8">
+                    <div class="flex items-center">
+                        {{ form.geofence_auto_activate }}
+                        <label for="{{ form.geofence_auto_activate.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            {{ form.geofence_auto_activate.label }}
+                        </label>
+                    </div>
+                    {% if form.geofence_auto_activate.help_text %}
+                    <p class="ml-2 text-xs text-gray-500">{{ form.geofence_auto_activate.help_text }}</p>
+                    {% endif %}
+                    {% if form.geofence_auto_activate.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.geofence_auto_activate.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Geofence Alert Threshold -->
+                <div>
+                    <label for="{{ form.geofence_alert_threshold.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.geofence_alert_threshold.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.geofence_alert_threshold }}
+                    {% if form.geofence_alert_threshold.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.geofence_alert_threshold.help_text }}</p>
+                    {% endif %}
+                    {% if form.geofence_alert_threshold.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.geofence_alert_threshold.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Fraud Detection Settings Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center mb-6">
+                <div class="flex-shrink-0 bg-red-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-semibold text-gray-900">{% trans "Fraud Detection Settings" %}</h2>
+                    <p class="text-sm text-gray-600">{% trans "Configure fraud detection thresholds and parameters" %}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Fraud Risk Threshold -->
+                <div>
+                    <label for="{{ form.fraud_risk_threshold.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.fraud_risk_threshold.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.fraud_risk_threshold }}
+                    {% if form.fraud_risk_threshold.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.fraud_risk_threshold.help_text }}</p>
+                    {% endif %}
+                    {% if form.fraud_risk_threshold.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.fraud_risk_threshold.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Fraud Auto Block -->
+                <div class="flex items-center h-full pt-8">
+                    <div class="flex items-center">
+                        {{ form.fraud_auto_block }}
+                        <label for="{{ form.fraud_auto_block.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            {{ form.fraud_auto_block.label }}
+                        </label>
+                    </div>
+                    {% if form.fraud_auto_block.help_text %}
+                    <p class="ml-2 text-xs text-gray-500">{{ form.fraud_auto_block.help_text }}</p>
+                    {% endif %}
+                    {% if form.fraud_auto_block.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.fraud_auto_block.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Max Failed Attempts -->
+                <div>
+                    <label for="{{ form.max_failed_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.max_failed_attempts.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.max_failed_attempts }}
+                    {% if form.max_failed_attempts.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.max_failed_attempts.help_text }}</p>
+                    {% endif %}
+                    {% if form.max_failed_attempts.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.max_failed_attempts.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Failed Attempt Window -->
+                <div>
+                    <label for="{{ form.failed_attempt_window.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.failed_attempt_window.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.failed_attempt_window }}
+                    {% if form.failed_attempt_window.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.failed_attempt_window.help_text }}</p>
+                    {% endif %}
+                    {% if form.failed_attempt_window.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.failed_attempt_window.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Notice -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">{% trans "Important Notice" %}</h3>
+                    <p class="mt-2 text-sm text-yellow-700">
+                        {% trans "Changing these settings will affect all new deliveries immediately. Existing deliveries will continue to use their original security parameters. Please ensure you understand the implications of each setting before making changes." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-4">
+            <a href="{% url 'delivery:delivery_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {% trans "Cancel" %}
+            </a>
+            <div class="flex items-center space-x-3">
+                <button type="button" onclick="document.getElementById('reset-modal').classList.remove('hidden')" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {% trans "Reset to Defaults" %}
+                </button>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {% trans "Save Settings" %}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="reset-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">{% trans "Reset to Default Settings" %}</h3>
+                        <p class="mt-2 text-sm text-gray-500">
+                            {% trans "Are you sure you want to reset all security settings to their default values? This action cannot be undone." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 flex items-center justify-end space-x-3 rounded-b-lg">
+                <button type="button" onclick="document.getElementById('reset-modal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    {% trans "Cancel" %}
+                </button>
+                <form method="post" action="{% url 'security:security_settings' %}?reset=true" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                        {% trans "Reset to Defaults" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

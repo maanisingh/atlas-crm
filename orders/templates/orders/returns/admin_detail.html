@@ -1,0 +1,16 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Return Details" %} - Admin</title>
+</head>
+<body>
+    <h1>{% trans "Return Details" %}</h1>
+    <div class="return-details">
+        <p>Return Code: {{ return.return_code }}</p>
+        <p>Status: {{ return.return_status }}</p>
+        <p>Description: {{ return.return_description }}</p>
+        <p>Customer: {{ return.customer.email }}</p>
+    </div>
+</body>
+</html>

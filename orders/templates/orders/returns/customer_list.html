@@ -1,0 +1,26 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ page_title }}</title>
+</head>
+<body>
+    <h1>{% trans "My Returns" %}</h1>
+    <div class="returns-list">
+        {% for return in returns %}
+            <div class="return-item">
+                <span class="return-code">{{ return.return_code }}</span>
+                <span class="return-status">{{ return.return_status }}</span>
+                <span class="order-code">{{ return.order.order_code }}</span>
+            </div>
+        {% empty %}
+            <p>{% trans "No returns found" %}</p>
+        {% endfor %}
+    </div>
+    <div class="stats">
+        <p>Total: {{ stats.total_returns }}</p>
+        <p>Pending: {{ stats.pending_returns }}</p>
+        <p>Approved: {{ stats.approved_returns }}</p>
+    </div>
+</body>
+</html>

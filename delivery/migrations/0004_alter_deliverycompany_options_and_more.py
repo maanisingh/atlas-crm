@@ -169,11 +169,9 @@ class Migration(migrations.Migration):
             name='delivery_notes',
             field=models.TextField(blank=True, verbose_name='Delivery Notes'),
         ),
-        migrations.AlterField(
-            model_name='deliveryrecord',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Removed: migrations.AlterField for DeliveryRecord.id from BigAutoField to UUIDField
+        # This causes PostgreSQL errors - cannot cast bigint to uuid
+        # Keeping BigAutoField for DeliveryRecord.id
         migrations.AlterField(
             model_name='deliveryrecord',
             name='picked_up_at',

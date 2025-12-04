@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from users.models import AuditLog
 from finance.models import Payment
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, F
 from products.models import Product
 from orders.models import Order
 import json
@@ -184,6 +184,13 @@ def _render_admin_dashboard(request, role_name):
                 for i in range(7)
             ]
         
+        # Get drilldown counts for dashboard cards
+        from inventory.models import InventoryAlert, StockReservation
+        inventory_alerts_count = InventoryAlert.objects.filter(is_resolved=False).count()
+        stock_reservations_count = StockReservation.objects.filter(
+            status__in=['pending', 'confirmed']
+        ).count()
+
         return render(request, 'dashboard/super_admin.html', {
             'active_users_count': active_users_count,
             'alerts_count': alerts_count,
@@ -191,7 +198,9 @@ def _render_admin_dashboard(request, role_name):
             'system_performance': system_performance_data.get('overall', 70),  # Real system performance percentage
             'recent_activities': recent_activities,
             'user_activity_data': json.dumps(user_activity_data),
-            'system_performance_data': json.dumps(chart_performance_data)
+            'system_performance_data': json.dumps(chart_performance_data),
+            'inventory_alerts_count': inventory_alerts_count,
+            'stock_reservations_count': stock_reservations_count,
         })
     else:
         # Admin Dashboard - Limited system access
@@ -603,3 +612,654 @@ def _get_recent_errors():
             'source': 'database'
         }
     ]
+
+
+# ============================================================================
+# DRILLDOWN VIEWS - Inventory Alerts
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def alerts_by_type(request, alert_type):
+    """View alerts filtered by type."""
+    from inventory.models import InventoryAlert
+
+    valid_types = dict(InventoryAlert.ALERT_TYPES).keys()
+    if alert_type not in valid_types:
+        alert_type = 'low_stock'
+
+    alerts = InventoryAlert.objects.filter(alert_type=alert_type).select_related(
+        'product', 'warehouse'
+    ).order_by('-created_at')
+
+    context = {
+        'alerts': alerts,
+        'alert_type': alert_type,
+        'alert_type_display': dict(InventoryAlert.ALERT_TYPES).get(alert_type, alert_type),
+        'alert_types': InventoryAlert.ALERT_TYPES,
+    }
+    return render(request, 'dashboard/drilldown/alerts_by_type.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def inventory_alerts(request):
+    """View all inventory alerts with filtering and drilldown."""
+    from inventory.models import InventoryAlert
+    from inventory.services import InventoryAlertService
+
+    # Get filter parameters
+    priority = request.GET.get('priority', '')
+    alert_type = request.GET.get('type', '')
+    status = request.GET.get('status', 'active')  # active, resolved, all
+
+    # Build query
+    alerts = InventoryAlert.objects.select_related('product', 'warehouse')
+
+    if priority:
+        alerts = alerts.filter(priority=priority)
+    if alert_type:
+        alerts = alerts.filter(alert_type=alert_type)
+    if status == 'active':
+        alerts = alerts.filter(is_resolved=False)
+    elif status == 'resolved':
+        alerts = alerts.filter(is_resolved=True)
+
+    alerts = alerts.order_by('-priority', '-created_at')[:100]
+
+    # Get summary stats
+    summary = InventoryAlertService.get_dashboard_summary()
+
+    context = {
+        'alerts': alerts,
+        'summary': summary,
+        'current_priority': priority,
+        'current_type': alert_type,
+        'current_status': status,
+        'alert_types': InventoryAlert.ALERT_TYPES,
+        'priorities': InventoryAlert.PRIORITIES,
+    }
+    return render(request, 'dashboard/drilldown/inventory_alerts.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def inventory_alert_detail(request, alert_id):
+    """View details of a specific inventory alert."""
+    from inventory.models import InventoryAlert, StockReservation
+
+    alert = get_object_or_404(InventoryAlert.objects.select_related(
+        'product', 'warehouse', 'acknowledged_by', 'resolved_by'
+    ), pk=alert_id)
+
+    # Get related data
+    related_reservations = []
+    if alert.product:
+        related_reservations = StockReservation.objects.filter(
+            product=alert.product,
+            status__in=['pending', 'confirmed']
+        ).select_related('order', 'warehouse')[:10]
+
+    context = {
+        'alert': alert,
+        'related_reservations': related_reservations,
+    }
+    return render(request, 'dashboard/drilldown/inventory_alert_detail.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def resolve_inventory_alert(request, alert_id):
+    """Resolve an inventory alert."""
+    from inventory.models import InventoryAlert
+
+    if request.method != 'POST':
+        return redirect('dashboard:inventory_alert_detail', alert_id=alert_id)
+
+    alert = get_object_or_404(InventoryAlert, pk=alert_id)
+    resolution_notes = request.POST.get('resolution_notes', '')
+
+    alert.is_resolved = True
+    alert.resolved_at = timezone.now()
+    alert.resolved_by = request.user
+    alert.resolution_notes = resolution_notes
+    alert.save()
+
+    from django.contrib import messages
+    messages.success(request, f'Alert "{alert.title}" has been resolved.')
+    return redirect('dashboard:inventory_alerts')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def stock_reservations(request):
+    """View all stock reservations with filtering."""
+    from inventory.models import StockReservation
+
+    # Get filter parameters
+    status = request.GET.get('status', '')
+    warehouse_id = request.GET.get('warehouse', '')
+
+    reservations = StockReservation.objects.select_related(
+        'product', 'warehouse', 'order', 'reserved_by'
+    )
+
+    if status:
+        reservations = reservations.filter(status=status)
+    if warehouse_id:
+        reservations = reservations.filter(warehouse_id=warehouse_id)
+
+    reservations = reservations.order_by('-reserved_at')[:100]
+
+    # Get summary stats
+    from django.db.models import Sum
+    active_reservations = StockReservation.objects.filter(
+        status__in=['pending', 'confirmed']
+    )
+    summary = {
+        'total_active': active_reservations.count(),
+        'total_reserved_units': active_reservations.aggregate(
+            total=Sum('quantity')
+        )['total'] or 0,
+        'pending_count': active_reservations.filter(status='pending').count(),
+        'confirmed_count': active_reservations.filter(status='confirmed').count(),
+    }
+
+    # Get warehouses for filter
+    from inventory.models import Warehouse
+    warehouses = Warehouse.objects.filter(is_active=True)
+
+    context = {
+        'reservations': reservations,
+        'summary': summary,
+        'current_status': status,
+        'current_warehouse': warehouse_id,
+        'statuses': StockReservation.STATUS_CHOICES,
+        'warehouses': warehouses,
+    }
+    return render(request, 'dashboard/drilldown/stock_reservations.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def stock_reservation_detail(request, reservation_id):
+    """View details of a specific stock reservation."""
+    from inventory.models import StockReservation
+
+    reservation = get_object_or_404(StockReservation.objects.select_related(
+        'product', 'warehouse', 'order', 'order_item', 'reserved_by'
+    ), pk=reservation_id)
+
+    context = {
+        'reservation': reservation,
+    }
+    return render(request, 'dashboard/drilldown/stock_reservation_detail.html', context)
+
+
+# ============================================================================
+# DRILLDOWN VIEWS - Sales
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def sales_overview(request):
+    """Sales overview with drilldown capabilities."""
+    from orders.models import Order
+    from django.db.models import Sum, Count
+    from django.db.models.functions import TruncDate, TruncWeek, TruncMonth
+
+    # Get time range
+    period = request.GET.get('period', '30')  # days
+    try:
+        days = int(period)
+    except ValueError:
+        days = 30
+
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get orders in period
+    orders = Order.objects.filter(created_at__gte=start_date)
+
+    # Calculate totals
+    total_orders = orders.count()
+    total_revenue = sum(order.total_price for order in orders)
+    avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
+
+    # Group by status
+    status_breakdown = orders.values('status').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Daily sales for chart
+    daily_sales = orders.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        total=Count('id'),
+        revenue=Sum('order_items__subtotal')
+    ).order_by('date')
+
+    context = {
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'avg_order_value': avg_order_value,
+        'status_breakdown': status_breakdown,
+        'daily_sales': list(daily_sales),
+        'current_period': period,
+        'periods': [
+            ('7', 'Last 7 Days'),
+            ('30', 'Last 30 Days'),
+            ('90', 'Last 90 Days'),
+            ('365', 'Last Year'),
+        ]
+    }
+    return render(request, 'dashboard/drilldown/sales_overview.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def sales_by_period(request, period):
+    """Sales drilldown by specific period."""
+    from orders.models import Order
+
+    # Parse period (format: YYYY-MM-DD or YYYY-MM or YYYY)
+    try:
+        if len(period) == 10:  # Daily
+            date = timezone.datetime.strptime(period, '%Y-%m-%d')
+            start_date = date.replace(hour=0, minute=0, second=0)
+            end_date = date.replace(hour=23, minute=59, second=59)
+            period_type = 'daily'
+        elif len(period) == 7:  # Monthly
+            date = timezone.datetime.strptime(period + '-01', '%Y-%m-%d')
+            start_date = date
+            if date.month == 12:
+                end_date = date.replace(year=date.year + 1, month=1, day=1) - timedelta(seconds=1)
+            else:
+                end_date = date.replace(month=date.month + 1, day=1) - timedelta(seconds=1)
+            period_type = 'monthly'
+        else:  # Yearly
+            date = timezone.datetime.strptime(period + '-01-01', '%Y-%m-%d')
+            start_date = date
+            end_date = date.replace(year=date.year + 1, month=1, day=1) - timedelta(seconds=1)
+            period_type = 'yearly'
+
+        # Make timezone aware
+        start_date = timezone.make_aware(start_date) if timezone.is_naive(start_date) else start_date
+        end_date = timezone.make_aware(end_date) if timezone.is_naive(end_date) else end_date
+
+    except (ValueError, TypeError):
+        start_date = timezone.now() - timedelta(days=30)
+        end_date = timezone.now()
+        period_type = 'monthly'
+
+    orders = Order.objects.filter(
+        created_at__gte=start_date,
+        created_at__lte=end_date
+    ).select_related('customer').order_by('-created_at')
+
+    total_revenue = sum(order.total_price for order in orders)
+
+    context = {
+        'orders': orders,
+        'total_revenue': total_revenue,
+        'period': period,
+        'period_type': period_type,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'dashboard/drilldown/sales_by_period.html', context)
+
+
+# ============================================================================
+# DRILLDOWN VIEWS - User Activity
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def user_activity(request):
+    """User activity overview with drilldown."""
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+    import json
+
+    # Get time range
+    days = int(request.GET.get('days', 30))
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Active users count
+    active_users = User.objects.filter(
+        is_active=True,
+        last_login__gte=start_date
+    ).count()
+
+    # New registrations count
+    new_users = User.objects.filter(
+        date_joined__gte=start_date
+    ).count()
+
+    # User by role with active count
+    from roles.models import Role
+    users_by_role = []
+
+    # Get superusers
+    superuser_count = User.objects.filter(is_superuser=True, is_active=True).count()
+    if superuser_count > 0:
+        users_by_role.append({
+            'role': 'Super Admin',
+            'count': superuser_count,
+            'active': superuser_count
+        })
+
+    # Get users by role
+    roles = Role.objects.all()
+    for role in roles:
+        user_count = User.objects.filter(user_roles__role=role, is_active=True).count()
+        if user_count > 0:
+            users_by_role.append({
+                'role': role.name,
+                'count': user_count,
+                'active': User.objects.filter(
+                    user_roles__role=role,
+                    is_active=True,
+                    last_login__gte=start_date
+                ).count()
+            })
+
+    # Activity stats from audit log
+    activity_stats = {
+        'total_logins': AuditLog.objects.filter(
+            timestamp__gte=start_date,
+            action__icontains='login'
+        ).count(),
+        'total_actions': AuditLog.objects.filter(
+            timestamp__gte=start_date
+        ).count(),
+        'daily_activity': list(
+            AuditLog.objects.filter(timestamp__gte=start_date)
+            .annotate(date=TruncDate('timestamp'))
+            .values('date')
+            .annotate(count=Count('id'))
+            .order_by('date')
+            .values('date', 'count')
+        )
+    }
+
+    # Convert dates to string for JSON
+    for item in activity_stats['daily_activity']:
+        item['date'] = item['date'].isoformat() if item['date'] else None
+
+    # Most active users
+    most_active_users = User.objects.filter(
+        is_active=True
+    ).annotate(
+        action_count=Count('auditlog', filter=Q(auditlog__timestamp__gte=start_date))
+    ).order_by('-action_count')[:10]
+
+    context = {
+        'active_users': active_users,
+        'new_users': new_users,
+        'users_by_role': users_by_role,
+        'activity_stats': activity_stats,
+        'most_active_users': most_active_users,
+        'current_days': days,
+        'days_options': [
+            (7, 'Last 7 Days'),
+            (14, 'Last 14 Days'),
+            (30, 'Last 30 Days'),
+            (60, 'Last 60 Days'),
+            (90, 'Last 90 Days'),
+        ],
+    }
+    return render(request, 'dashboard/drilldown/user_activity.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_role('Super Admin') or u.has_role('Admin') or u.is_superuser)
+def user_activity_detail(request, user_id):
+    """Detailed activity for a specific user."""
+    user_obj = get_object_or_404(User, pk=user_id)
+
+    # Get user's audit logs
+    user_activities = AuditLog.objects.filter(
+        user=user_obj
+    ).order_by('-timestamp')[:100]
+
+    # Get user's orders if they're a customer
+    user_orders = Order.objects.filter(
+        Q(customer__user=user_obj) | Q(created_by=user_obj)
+    ).order_by('-created_at')[:20]
+
+    context = {
+        'user_obj': user_obj,
+        'user_activities': user_activities,
+        'user_orders': user_orders,
+    }
+    return render(request, 'dashboard/drilldown/user_activity_detail.html', context)
+
+
+# JSON API Endpoints for Dashboard Data
+from django.http import JsonResponse
+from analytics.services import OrderAnalytics, InventoryAnalytics, FinanceAnalytics, DeliveryAnalytics
+
+@login_required
+def json_executive_summary(request):
+    """Return executive summary data as JSON."""
+    try:
+        # Get current date range (last 30 days)
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+
+        # Order metrics
+        order_summary = OrderAnalytics.get_order_summary(days=30)
+
+        # Inventory metrics
+        inventory_summary = InventoryAnalytics.get_stock_summary()
+
+        # Finance metrics
+        finance_summary = FinanceAnalytics.get_revenue_summary(days=30)
+
+        # User metrics
+        total_users = User.objects.filter(is_active=True).count()
+        new_users_30d = User.objects.filter(
+            date_joined__gte=start_date
+        ).count()
+
+        # Recent orders
+        recent_orders = Order.objects.order_by('-created_at')[:10]
+        recent_orders_data = [{
+            'id': order.id,
+            'order_code': order.order_code,
+            'customer': order.customer,
+            'status': order.status,
+            'total': float(order.total_price),
+            'created_at': order.created_at.isoformat()
+        } for order in recent_orders]
+
+        # Alerts
+        low_stock_count = Product.objects.filter(
+            stock__lte=10
+        ).count()
+
+        data = {
+            'success': True,
+            'timestamp': timezone.now().isoformat(),
+            'period': {
+                'start': start_date.isoformat(),
+                'end': end_date.isoformat(),
+                'days': 30
+            },
+            'orders': {
+                'total': order_summary.get('total_orders', 0),
+                'revenue': order_summary.get('total_revenue', 0),
+                'average_value': order_summary.get('average_order_value', 0),
+            },
+            'inventory': {
+                'total_products': inventory_summary.get('total_products', 0),
+                'in_stock': inventory_summary.get('in_stock', 0),
+                'out_of_stock': inventory_summary.get('out_of_stock', 0),
+                'low_stock_alerts': low_stock_count,
+            },
+            'finance': {
+                'total_revenue': finance_summary.get('total_revenue', 0),
+                'payments_received': finance_summary.get('total_payments', 0),
+                'outstanding': finance_summary.get('outstanding_amount', 0),
+            },
+            'users': {
+                'total_active': total_users,
+                'new_this_month': new_users_30d,
+            },
+            'recent_orders': recent_orders_data,
+        }
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def json_orders(request):
+    """Return order data as JSON."""
+    try:
+        days = int(request.GET.get('days', 30))
+
+        # Get order analytics
+        order_summary = OrderAnalytics.get_order_summary(days=days)
+        fulfillment_rate = OrderAnalytics.get_order_fulfillment_rate(days=days)
+        conversion_metrics = OrderAnalytics.get_conversion_metrics(days=days)
+
+        # Get recent orders
+        recent_orders = Order.objects.order_by('-created_at')[:50]
+        orders_list = [{
+            'id': order.id,
+            'order_code': order.order_code,
+            'customer': order.customer,
+            'customer_phone': order.customer_phone,
+            'status': order.status,
+            'total_price': float(order.total_price),
+            'created_at': order.created_at.isoformat(),
+            'city': order.city,
+        } for order in recent_orders]
+
+        data = {
+            'success': True,
+            'timestamp': timezone.now().isoformat(),
+            'period_days': days,
+            'summary': order_summary,
+            'fulfillment': fulfillment_rate,
+            'conversion': conversion_metrics,
+            'orders': orders_list,
+        }
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def json_inventory(request):
+    """Return inventory data as JSON."""
+    try:
+        # Get inventory analytics
+        stock_summary = InventoryAnalytics.get_stock_summary()
+        top_sellers = InventoryAnalytics.get_top_selling_products(days=30, limit=20)
+
+        # Get low stock products
+        low_stock_products = Product.objects.filter(
+            stock__lte=10,
+            stock__gt=0
+        ).values(
+            'id', 'name', 'sku', 'stock', 'price'
+        )[:50]
+
+        # Get out of stock products
+        out_of_stock_products = Product.objects.filter(
+            stock=0
+        ).values(
+            'id', 'name', 'sku', 'price'
+        )[:50]
+
+        data = {
+            'success': True,
+            'timestamp': timezone.now().isoformat(),
+            'summary': stock_summary,
+            'top_sellers': top_sellers,
+            'low_stock': list(low_stock_products),
+            'out_of_stock': list(out_of_stock_products),
+        }
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def json_finance(request):
+    """Return finance data as JSON."""
+    try:
+        days = int(request.GET.get('days', 30))
+
+        # Get finance analytics
+        revenue_summary = FinanceAnalytics.get_revenue_summary(days=days)
+        payment_breakdown = FinanceAnalytics.get_payment_methods_breakdown(days=days)
+
+        # Get recent payments
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=days)
+
+        recent_payments = Payment.objects.filter(
+            payment_date__gte=start_date
+        ).order_by('-payment_date')[:50]
+
+        payments_list = [{
+            'id': payment.id,
+            'amount': float(payment.amount),
+            'payment_method': payment.payment_method,
+            'payment_date': payment.payment_date.isoformat(),
+            'status': payment.payment_status,
+            'order_id': payment.order.id if payment.order else None,
+        } for payment in recent_payments]
+
+        # Calculate daily revenue trend
+        daily_revenue = []
+        for i in range(days):
+            day = start_date + timedelta(days=i)
+            day_end = day + timedelta(days=1)
+            day_payments = Payment.objects.filter(
+                payment_date__gte=day,
+                payment_date__lt=day_end
+            )
+            day_total = day_payments.aggregate(total=Sum('amount'))['total'] or 0
+
+            daily_revenue.append({
+                'date': day.date().isoformat(),
+                'revenue': float(day_total)
+            })
+
+        data = {
+            'success': True,
+            'timestamp': timezone.now().isoformat(),
+            'period_days': days,
+            'summary': revenue_summary,
+            'payment_methods': payment_breakdown,
+            'recent_payments': payments_list,
+            'daily_revenue': daily_revenue,
+        }
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

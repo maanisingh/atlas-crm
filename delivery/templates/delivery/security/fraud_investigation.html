@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Fraud Investigation" %} - #{{ fraud.id }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-gray-600">
+            <li><a href="{% url 'security:fraud_detection_list' %}" class="hover:text-blue-600">{% trans "Fraud Detection" %}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">{% trans "Case" %} #{{ fraud.id|slice:":8" }}</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Fraud Investigation" %}</h1>
+                <p class="text-gray-600">{% trans "Investigate and manage fraud case" %} #{{ fraud.id|slice:":8" }}</p>
+            </div>
+            <div class="flex-shrink-0">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
+                    {% if fraud.status == 'reported' %}bg-yellow-100 text-yellow-800
+                    {% elif fraud.status == 'investigating' %}bg-orange-100 text-orange-800
+                    {% elif fraud.status == 'confirmed' %}bg-red-100 text-red-800
+                    {% elif fraud.status == 'resolved' %}bg-green-100 text-green-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    {{ fraud.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content (2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Fraud Case Details -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">{% trans "Case Details" %}</h2>
+
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Case ID" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-mono font-medium text-gray-900">#{{ fraud.id }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Delivery" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <a href="{% url 'delivery:delivery_detail' fraud.delivery.id %}" class="font-mono font-semibold text-indigo-600 hover:text-indigo-900">
+                                {{ fraud.delivery.tracking_number }}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Fraud Type" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                {% if fraud.fraud_type == 'unauthorized_access' %}bg-red-100 text-red-800
+                                {% elif fraud.fraud_type == 'fake_otp' %}bg-orange-100 text-orange-800
+                                {% elif fraud.fraud_type == 'location_mismatch' %}bg-yellow-100 text-yellow-800
+                                {% elif fraud.fraud_type == 'suspicious_activity' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ fraud.get_fraud_type_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Risk Score" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <div class="flex-1 max-w-xs">
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div class="h-3 rounded-full
+                                            {% if fraud.risk_score >= 80 %}bg-red-600
+                                            {% elif fraud.risk_score >= 60 %}bg-orange-600
+                                            {% elif fraud.risk_score >= 40 %}bg-yellow-600
+                                            {% else %}bg-green-600{% endif %}"
+                                            style="width: {{ fraud.risk_score }}%"></div>
+                                    </div>
+                                </div>
+                                <span class="ml-3 text-sm font-bold text-gray-900">{{ fraud.risk_score }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Reported By" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-900">{{ fraud.reported_by.get_full_name }}</p>
+                            <p class="text-xs text-gray-500">{{ fraud.reported_at|date:"F d, Y \a\t H:i" }}</p>
+                        </div>
+                    </div>
+
+                    {% if fraud.resolved_by %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-32">
+                            <p class="text-sm font-medium text-gray-500">{% trans "Resolved By" %}</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-900">{{ fraud.resolved_by.get_full_name }}</p>
+                            <p class="text-xs text-gray-500">{{ fraud.resolved_at|date:"F d, Y \a\t H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Description Section -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{% trans "Description" %}</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ fraud.description }}</p>
+                    </div>
+                </div>
+
+                <!-- Evidence Section -->
+                {% if fraud.evidence %}
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{% trans "Evidence" %}</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <pre class="text-xs text-gray-900 font-mono overflow-x-auto">{{ fraud.evidence|safe }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Update Investigation Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">{% trans "Update Investigation" %}</h2>
+
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700">{{ form.non_field_errors }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status Field -->
+                    <div>
+                        <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.status.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.status.help_text }}</p>
+                        {% endif %}
+                        {% if form.status.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Investigation Notes Field -->
+                    <div>
+                        <label for="{{ form.investigation_notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.investigation_notes.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.investigation_notes }}
+                        {% if form.investigation_notes.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.investigation_notes.help_text }}</p>
+                        {% endif %}
+                        {% if form.investigation_notes.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.investigation_notes.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Evidence Field -->
+                    <div>
+                        <label for="{{ form.additional_evidence.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.additional_evidence.label }}
+                        </label>
+                        {{ form.additional_evidence }}
+                        {% if form.additional_evidence.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.additional_evidence.help_text }}</p>
+                        {% endif %}
+                        {% if form.additional_evidence.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.additional_evidence.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-blue-800">{% trans "Investigation Guidelines" %}</h3>
+                                <div class="mt-2 text-sm text-blue-700">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>{% trans "Document all findings and evidence thoroughly" %}</li>
+                                        <li>{% trans "Update status as investigation progresses" %}</li>
+                                        <li>{% trans "Include timestamps and sources for all evidence" %}</li>
+                                        <li>{% trans "Contact affected parties if necessary" %}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <a href="{% url 'security:fraud_detection_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            {% trans "Back to List" %}
+                        </a>
+                        <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {% trans "Update Investigation" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar (1/3) -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Related Delivery Card -->
+            <div class="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-lg p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">{% trans "Related Delivery" %}</h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs text-gray-600 mb-1">{% trans "Tracking Number" %}</p>
+                        <a href="{% url 'delivery:delivery_detail' fraud.delivery.id %}" class="font-mono font-semibold text-red-600 hover:text-red-900">
+                            {{ fraud.delivery.tracking_number }}
+                        </a>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-600 mb-1">{% trans "Status" %}</p>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {{ fraud.delivery.get_status_display }}
+                        </span>
+                    </div>
+                    {% if fraud.delivery.courier %}
+                    <div>
+                        <p class="text-xs text-gray-600 mb-1">{% trans "Courier" %}</p>
+                        <p class="text-sm font-medium text-gray-900">{{ fraud.delivery.courier.user.get_full_name }}</p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-xs text-gray-600 mb-1">{% trans "Customer" %}</p>
+                        <p class="text-sm font-medium text-gray-900">{{ fraud.delivery.customer.user.get_full_name }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action History Card -->
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {% trans "Action History" %}
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-20 text-xs text-gray-500">
+                            {{ fraud.reported_at|date:"H:i:s" }}
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-700">{% trans "Case reported" %}</p>
+                            <p class="text-xs text-gray-500">{{ fraud.reported_by.get_full_name }}</p>
+                        </div>
+                    </div>
+                    {% if fraud.resolved_at %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-20 text-xs text-gray-500">
+                            {{ fraud.resolved_at|date:"H:i:s" }}
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-700">{% trans "Case resolved" %}</p>
+                            <p class="text-xs text-gray-500">{{ fraud.resolved_by.get_full_name }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">{% trans "Quick Actions" %}</h3>
+                <div class="space-y-2">
+                    <a href="{% url 'delivery:delivery_detail' fraud.delivery.id %}" class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {% trans "View Delivery" %}
+                    </a>
+                    <a href="{% url 'security:security_events_list' %}?delivery={{ fraud.delivery.id }}" class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {% trans "View Security Events" %}
+                    </a>
+                    <a href="{% url 'security:fraud_detection_list' %}" class="block w-full text-center px-4 py-2 bg-gray-100 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">
+                        {% trans "Back to All Cases" %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Box for High Risk -->
+            {% if fraud.risk_score >= 70 %}
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">{% trans "High Risk Case" %}</h3>
+                        <p class="mt-2 text-xs text-red-700">
+                            {% trans "This case has a high risk score. Prioritize investigation and consider escalation if necessary." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

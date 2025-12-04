@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderItem, OrderWorkflowLog
+from .models import Order, OrderItem, OrderWorkflowLog, Return, ReturnItem, ReturnStatusLog
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -133,3 +133,196 @@ class OrderWorkflowLogAdmin(admin.ModelAdmin):
     search_fields = ('order__order_code', 'user__first_name', 'user__last_name', 'user__email', 'notes')
     readonly_fields = ('timestamp',)
     ordering = ('-timestamp',)
+
+# Return Management Admin Classes
+
+class ReturnItemInline(admin.TabularInline):
+    model = ReturnItem
+    extra = 1
+    fields = ('order_item', 'quantity', 'reason', 'condition', 'notes')
+    readonly_fields = ('refund_value',)
+
+@admin.register(Return)
+class ReturnAdmin(admin.ModelAdmin):
+    list_display = ('return_code', 'order', 'customer', 'return_reason', 'return_status', 'refund_status', 'refund_amount_aed', 'created_at')
+    list_filter = ('return_status', 'refund_status', 'return_reason', 'requires_manager_approval', 'customer_contacted', 'created_at')
+    search_fields = ('return_code', 'order__order_code', 'customer__email', 'customer__first_name', 'customer__last_name')
+    readonly_fields = ('return_code', 'created_at', 'updated_at', 'approved_at', 'received_at_warehouse',
+                      'inspection_started_at', 'inspection_completed_at', 'refund_processed_at',
+                      'restocked_at', 'completed_at', 'total_deductions', 'net_refund_amount',
+                      'net_refund_amount_aed', 'days_since_request')
+    inlines = [ReturnItemInline]
+    actions = ['approve_returns', 'reject_returns', 'mark_as_received', 'process_refunds']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('return_code', 'order', 'customer', 'created_at', 'updated_at')
+        }),
+        ('Return Details', {
+            'fields': ('return_reason', 'return_description', 'return_status', 'priority', 'requires_manager_approval')
+        }),
+        ('Evidence & Documentation', {
+            'fields': ('return_photo_1', 'return_photo_2', 'return_photo_3', 'return_video'),
+            'classes': ('collapse',)
+        }),
+        ('Approval Information', {
+            'fields': ('approved_by', 'approved_at', 'rejection_reason'),
+            'classes': ('collapse',)
+        }),
+        ('Return Shipping', {
+            'fields': ('return_tracking_number', 'return_carrier', 'pickup_scheduled_date', 'pickup_address'),
+            'classes': ('collapse',)
+        }),
+        ('Warehouse Receipt', {
+            'fields': ('received_by', 'received_at_warehouse'),
+            'classes': ('collapse',)
+        }),
+        ('Inspection', {
+            'fields': ('inspector', 'inspection_started_at', 'inspection_completed_at',
+                      'item_condition', 'inspection_notes', 'inspection_photos'),
+            'classes': ('collapse',)
+        }),
+        ('Restocking Decision', {
+            'fields': ('can_restock', 'restocked', 'restocked_by', 'restocked_at'),
+            'classes': ('collapse',)
+        }),
+        ('Refund Information', {
+            'fields': ('refund_amount', 'refund_method', 'refund_status', 'refund_processed_by',
+                      'refund_processed_at', 'refund_reference', 'refund_notes')
+        }),
+        ('Deductions', {
+            'fields': ('restocking_fee', 'damage_deduction', 'shipping_cost_deduction',
+                      'total_deductions', 'net_refund_amount', 'net_refund_amount_aed'),
+            'classes': ('collapse',)
+        }),
+        ('Customer Contact', {
+            'fields': ('customer_contacted', 'customer_contact_notes'),
+            'classes': ('collapse',)
+        }),
+        ('Timeline', {
+            'fields': ('days_since_request', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def approve_returns(self, request, queryset):
+        from django.utils import timezone
+        updated_count = 0
+
+        for return_obj in queryset.filter(return_status='pending_approval'):
+            # Create status log
+            ReturnStatusLog.objects.create(
+                return_request=return_obj,
+                old_status=return_obj.return_status,
+                new_status='approved',
+                changed_by=request.user,
+                notes='Return approved by admin'
+            )
+
+            return_obj.return_status = 'approved'
+            return_obj.approved_by = request.user
+            return_obj.approved_at = timezone.now()
+            return_obj.save()
+            updated_count += 1
+
+        self.message_user(request, f'{updated_count} returns have been approved.')
+    approve_returns.short_description = "Approve selected returns"
+
+    def reject_returns(self, request, queryset):
+        from django.utils import timezone
+        updated_count = 0
+
+        for return_obj in queryset.filter(return_status='pending_approval'):
+            # Create status log
+            ReturnStatusLog.objects.create(
+                return_request=return_obj,
+                old_status=return_obj.return_status,
+                new_status='rejected',
+                changed_by=request.user,
+                notes='Return rejected by admin'
+            )
+
+            return_obj.return_status = 'rejected'
+            return_obj.approved_by = request.user
+            return_obj.approved_at = timezone.now()
+            return_obj.rejection_reason = 'Rejected by administrator'
+            return_obj.save()
+            updated_count += 1
+
+        self.message_user(request, f'{updated_count} returns have been rejected.')
+    reject_returns.short_description = "Reject selected returns"
+
+    def mark_as_received(self, request, queryset):
+        from django.utils import timezone
+        updated_count = 0
+
+        for return_obj in queryset.filter(return_status='in_transit'):
+            # Create status log
+            ReturnStatusLog.objects.create(
+                return_request=return_obj,
+                old_status=return_obj.return_status,
+                new_status='received',
+                changed_by=request.user,
+                notes='Return marked as received at warehouse'
+            )
+
+            return_obj.return_status = 'received'
+            return_obj.received_by = request.user
+            return_obj.received_at_warehouse = timezone.now()
+            return_obj.save()
+            updated_count += 1
+
+        self.message_user(request, f'{updated_count} returns have been marked as received.')
+    mark_as_received.short_description = "Mark as received at warehouse"
+
+    def process_refunds(self, request, queryset):
+        from django.utils import timezone
+        updated_count = 0
+
+        for return_obj in queryset.filter(return_status='approved_for_refund', refund_status='approved'):
+            # Create status log
+            ReturnStatusLog.objects.create(
+                return_request=return_obj,
+                old_status=return_obj.refund_status,
+                new_status='completed',
+                changed_by=request.user,
+                notes='Refund processed by admin'
+            )
+
+            return_obj.refund_status = 'completed'
+            return_obj.refund_processed_by = request.user
+            return_obj.refund_processed_at = timezone.now()
+            return_obj.return_status = 'refund_completed'
+            return_obj.save()
+            updated_count += 1
+
+        self.message_user(request, f'{updated_count} refunds have been processed.')
+    process_refunds.short_description = "Process approved refunds"
+
+@admin.register(ReturnItem)
+class ReturnItemAdmin(admin.ModelAdmin):
+    list_display = ('return_request', 'order_item', 'quantity', 'reason', 'condition', 'refund_value')
+    list_filter = ('reason', 'condition')
+    search_fields = ('return_request__return_code', 'order_item__product__name_en', 'order_item__product__name_ar')
+    readonly_fields = ('refund_value',)
+
+    def refund_value(self, obj):
+        return f"AED {obj.refund_value:,.2f}"
+    refund_value.short_description = 'Refund Value'
+
+@admin.register(ReturnStatusLog)
+class ReturnStatusLogAdmin(admin.ModelAdmin):
+    list_display = ('return_request', 'old_status', 'new_status', 'changed_by', 'timestamp')
+    list_filter = ('old_status', 'new_status', 'timestamp')
+    search_fields = ('return_request__return_code', 'changed_by__email', 'changed_by__first_name', 'changed_by__last_name', 'notes')
+    readonly_fields = ('timestamp',)
+    ordering = ('-timestamp',)
+
+    def has_add_permission(self, request):
+        # Status logs should only be created automatically, not manually
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion of audit logs
+        return False

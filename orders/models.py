@@ -6,7 +6,8 @@ import uuid
 
 def generate_order_code():
     """Generate a shorter order code with # prefix"""
-    from django.db.utils import OperationalError, ProgrammingError
+    from django.db.utils import OperationalError, ProgrammingError, InternalError
+    from django.db import connection
     from django.utils import timezone
     import random
 
@@ -14,15 +15,20 @@ def generate_order_code():
     date_part = f"{today.year % 100:02d}{today.month:02d}{today.day:02d}"
 
     try:
-        from .models import Order 
+        # Check if we're in a migration context or if the table exists
+        from django.apps import apps
+        if not apps.ready:
+            # During migrations, just return a unique code
+            return f"#{date_part}{random.randint(1, 999):03d}"
 
-       
+        from .models import Order
+
         existing_orders_today = Order.objects.filter(
             order_code__startswith=f"#{date_part}"
         ).count()
-    except (OperationalError, ProgrammingError):
-      
-        existing_orders_today = 0
+    except (OperationalError, ProgrammingError, InternalError, Exception):
+        # During migrations or if table doesn't exist, return unique code
+        return f"#{date_part}{random.randint(1, 999):03d}"
 
     order_number = existing_orders_today + 1
     code = f"#{date_part}{order_number:03d}"
@@ -31,7 +37,7 @@ def generate_order_code():
         while Order.objects.filter(order_code=code).exists():
             order_number += 1
             code = f"#{date_part}{order_number:03d}"
-    except (OperationalError, ProgrammingError):
+    except (OperationalError, ProgrammingError, InternalError, Exception):
         pass
 
     return code
@@ -238,3 +244,257 @@ class StatusLog(models.Model):
     
     def __str__(self):
         return f"{self.order.order_code} - {self.old_status} → {self.new_status} by {self.changed_by.username}"
+
+
+class Return(models.Model):
+    """Comprehensive return management for orders"""
+
+    RETURN_REASON_CHOICES = [
+        ('damaged', _('Product Damaged')),
+        ('defective', _('Product Defective/Not Working')),
+        ('wrong_item', _('Wrong Item Delivered')),
+        ('not_as_described', _('Not As Described')),
+        ('size_issue', _('Size/Fit Issue')),
+        ('quality_issue', _('Quality Issue')),
+        ('customer_regret', _('Customer Changed Mind')),
+        ('duplicate_order', _('Duplicate Order')),
+        ('late_delivery', _('Late Delivery')),
+        ('other', _('Other Reason')),
+    ]
+
+    RETURN_STATUS_CHOICES = [
+        ('requested', _('Return Requested')),
+        ('pending_approval', _('Pending Approval')),
+        ('approved', _('Approved')),
+        ('rejected', _('Rejected')),
+        ('pickup_scheduled', _('Pickup Scheduled')),
+        ('in_transit', _('In Transit to Warehouse')),
+        ('received', _('Received at Warehouse')),
+        ('inspecting', _('Under Inspection')),
+        ('inspected', _('Inspection Completed')),
+        ('approved_for_refund', _('Approved for Refund')),
+        ('refund_processing', _('Refund Processing')),
+        ('refund_completed', _('Refund Completed')),
+        ('restocked', _('Item Restocked')),
+        ('completed', _('Return Completed')),
+        ('cancelled', _('Return Cancelled')),
+    ]
+
+    ITEM_CONDITION_CHOICES = [
+        ('excellent', _('Excellent - Like New')),
+        ('good', _('Good - Minor Wear')),
+        ('fair', _('Fair - Noticeable Wear')),
+        ('poor', _('Poor - Significant Damage')),
+        ('damaged', _('Damaged - Not Resellable')),
+        ('defective', _('Defective/Not Working')),
+        ('opened', _('Opened Package Only')),
+        ('unopened', _('Unopened Package')),
+    ]
+
+    REFUND_METHOD_CHOICES = [
+        ('original_payment', _('Original Payment Method')),
+        ('bank_transfer', _('Bank Transfer')),
+        ('store_credit', _('Store Credit')),
+        ('cash', _('Cash')),
+        ('wallet', _('Wallet/Account Balance')),
+    ]
+
+    REFUND_STATUS_CHOICES = [
+        ('pending', _('Pending')),
+        ('approved', _('Approved')),
+        ('processing', _('Processing')),
+        ('completed', _('Completed')),
+        ('failed', _('Failed')),
+        ('cancelled', _('Cancelled')),
+        ('partial', _('Partial Refund')),
+    ]
+
+    # Basic Information
+    return_code = models.CharField(max_length=50, unique=True, verbose_name=_('Return Code'))
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='returns', verbose_name=_('Order'))
+    customer = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='returns', verbose_name=_('Customer'), null=True, blank=True)
+
+    # Return Request Details
+    return_reason = models.CharField(max_length=30, choices=RETURN_REASON_CHOICES, verbose_name=_('Return Reason'))
+    return_description = models.TextField(verbose_name=_('Detailed Description'), help_text=_('Detailed explanation of the return reason'))
+    return_status = models.CharField(max_length=30, choices=RETURN_STATUS_CHOICES, default='requested', verbose_name=_('Return Status'))
+
+    # Evidence and Documentation
+    return_photo_1 = models.ImageField(upload_to='returns/photos/', blank=True, null=True, verbose_name=_('Return Photo 1'))
+    return_photo_2 = models.ImageField(upload_to='returns/photos/', blank=True, null=True, verbose_name=_('Return Photo 2'))
+    return_photo_3 = models.ImageField(upload_to='returns/photos/', blank=True, null=True, verbose_name=_('Return Photo 3'))
+    return_video = models.FileField(upload_to='returns/videos/', blank=True, null=True, verbose_name=_('Return Video Evidence'))
+
+    # Approval Workflow
+    approved_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_returns', verbose_name=_('Approved By'))
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Approved At'))
+    rejection_reason = models.TextField(blank=True, verbose_name=_('Rejection Reason'))
+
+    # Return Shipping Information
+    return_tracking_number = models.CharField(max_length=100, blank=True, verbose_name=_('Return Tracking Number'))
+    return_carrier = models.CharField(max_length=100, blank=True, verbose_name=_('Return Carrier'))
+    pickup_scheduled_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Pickup Scheduled Date'))
+    pickup_address = models.TextField(blank=True, verbose_name=_('Pickup Address'))
+
+    # Warehouse Receipt
+    received_at_warehouse = models.DateTimeField(null=True, blank=True, verbose_name=_('Received at Warehouse'))
+    received_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='received_returns', verbose_name=_('Received By'))
+
+    # Inspection Details
+    inspector = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='inspected_returns', verbose_name=_('Inspector'))
+    inspection_started_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Inspection Started'))
+    inspection_completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Inspection Completed'))
+    item_condition = models.CharField(max_length=20, choices=ITEM_CONDITION_CHOICES, blank=True, verbose_name=_('Item Condition'))
+    inspection_notes = models.TextField(blank=True, verbose_name=_('Inspection Notes'))
+    inspection_photos = models.JSONField(default=list, blank=True, verbose_name=_('Inspection Photos URLs'))
+
+    # Restocking Decision
+    can_restock = models.BooleanField(default=False, verbose_name=_('Can Be Restocked'))
+    restocked = models.BooleanField(default=False, verbose_name=_('Item Restocked'))
+    restocked_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Restocked At'))
+    restocked_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='restocked_returns', verbose_name=_('Restocked By'))
+
+    # Refund Information
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_('Refund Amount (AED)'))
+    refund_method = models.CharField(max_length=30, choices=REFUND_METHOD_CHOICES, blank=True, verbose_name=_('Refund Method'))
+    refund_status = models.CharField(max_length=20, choices=REFUND_STATUS_CHOICES, default='pending', verbose_name=_('Refund Status'))
+    refund_processed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_refunds', verbose_name=_('Refund Processed By'))
+    refund_processed_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Refund Processed At'))
+    refund_reference = models.CharField(max_length=100, blank=True, verbose_name=_('Refund Reference Number'))
+    refund_notes = models.TextField(blank=True, verbose_name=_('Refund Notes'))
+
+    # Deductions
+    restocking_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_('Restocking Fee (AED)'))
+    damage_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_('Damage Deduction (AED)'))
+    shipping_cost_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_('Shipping Cost Deduction (AED)'))
+
+    # Additional Fields
+    priority = models.IntegerField(default=0, verbose_name=_('Priority Level'), help_text=_('Higher number = higher priority'))
+    requires_manager_approval = models.BooleanField(default=False, verbose_name=_('Requires Manager Approval'))
+    customer_contacted = models.BooleanField(default=False, verbose_name=_('Customer Contacted'))
+    customer_contact_notes = models.TextField(blank=True, verbose_name=_('Customer Contact Notes'))
+
+    # Timestamps
+    created_at = models.DateTimeField(default=timezone.now, verbose_name=_('Return Requested At'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Last Updated'))
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Return Completed At'))
+
+    class Meta:
+        verbose_name = _('Return')
+        verbose_name_plural = _('Returns')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['return_code']),
+            models.Index(fields=['return_status']),
+            models.Index(fields=['refund_status']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['order']),
+        ]
+
+    def __str__(self):
+        return f"{self.return_code} - {self.order.order_code}"
+
+    def save(self, *args, **kwargs):
+        # Generate return code if not exists
+        if not self.return_code:
+            import random
+            from django.utils import timezone
+            today = timezone.now().date()
+            date_part = f"RET{today.year % 100:02d}{today.month:02d}{today.day:02d}"
+
+            # Get count of returns today
+            existing_returns_today = Return.objects.filter(
+                return_code__startswith=date_part
+            ).count()
+
+            return_number = existing_returns_today + 1
+            self.return_code = f"{date_part}{return_number:04d}"
+
+            # Ensure uniqueness
+            while Return.objects.filter(return_code=self.return_code).exists():
+                return_number += 1
+                self.return_code = f"{date_part}{return_number:04d}"
+
+        super().save(*args, **kwargs)
+
+    @property
+    def total_deductions(self):
+        """Calculate total deductions"""
+        return self.restocking_fee + self.damage_deduction + self.shipping_cost_deduction
+
+    @property
+    def net_refund_amount(self):
+        """Calculate net refund amount after deductions"""
+        return self.refund_amount - self.total_deductions
+
+    @property
+    def net_refund_amount_aed(self):
+        """Get net refund amount formatted in AED"""
+        return f"AED {self.net_refund_amount:,.2f}"
+
+    @property
+    def refund_amount_aed(self):
+        """Get refund amount formatted in AED"""
+        return f"AED {self.refund_amount:,.2f}"
+
+    @property
+    def is_pending_approval(self):
+        """Check if return is awaiting approval"""
+        return self.return_status in ['requested', 'pending_approval']
+
+    @property
+    def is_approved(self):
+        """Check if return is approved"""
+        return self.return_status not in ['requested', 'pending_approval', 'rejected', 'cancelled']
+
+    @property
+    def is_completed(self):
+        """Check if return process is completed"""
+        return self.return_status == 'completed'
+
+    @property
+    def days_since_request(self):
+        """Calculate days since return was requested"""
+        from django.utils import timezone
+        delta = timezone.now() - self.created_at
+        return delta.days
+
+
+class ReturnItem(models.Model):
+    """Individual items in a return (for orders with multiple items)"""
+    return_request = models.ForeignKey(Return, on_delete=models.CASCADE, related_name='items', verbose_name=_('Return'))
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, verbose_name=_('Order Item'))
+    quantity = models.PositiveIntegerField(verbose_name=_('Quantity to Return'))
+    reason = models.CharField(max_length=30, choices=Return.RETURN_REASON_CHOICES, verbose_name=_('Item Return Reason'))
+    condition = models.CharField(max_length=20, choices=Return.ITEM_CONDITION_CHOICES, blank=True, verbose_name=_('Item Condition'))
+    notes = models.TextField(blank=True, verbose_name=_('Item Notes'))
+
+    class Meta:
+        verbose_name = _('Return Item')
+        verbose_name_plural = _('Return Items')
+
+    def __str__(self):
+        return f"{self.return_request.return_code} - {self.order_item.product.name_en} x {self.quantity}"
+
+    @property
+    def refund_value(self):
+        """Calculate refund value for this item"""
+        return self.order_item.price * self.quantity
+
+
+class ReturnStatusLog(models.Model):
+    """Track status changes for returns"""
+    return_request = models.ForeignKey(Return, on_delete=models.CASCADE, related_name='status_logs', verbose_name=_('Return'))
+    old_status = models.CharField(max_length=30, verbose_name=_('Old Status'), blank=True)
+    new_status = models.CharField(max_length=30, verbose_name=_('New Status'))
+    changed_by = models.ForeignKey('users.User', on_delete=models.CASCADE, verbose_name=_('Changed By'))
+    notes = models.TextField(blank=True, verbose_name=_('Notes'))
+    timestamp = models.DateTimeField(default=timezone.now, verbose_name=_('Timestamp'))
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = _('Return Status Log')
+        verbose_name_plural = _('Return Status Logs')
+
+    def __str__(self):
+        return f"{self.return_request.return_code} - {self.old_status} → {self.new_status}"

@@ -1,0 +1,15 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Mark Return Received" %}</title>
+</head>
+<body>
+    <h1>{% trans "Mark Return as Received" %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Confirm Receipt" %}</button>
+    </form>
+</body>
+</html>

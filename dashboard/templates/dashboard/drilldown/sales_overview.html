@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Sales Overview - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">Sales Overview</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Sales Overview</h1>
+            <div class="flex gap-2">
+                <a href="{% url 'dashboard:index' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            {% for key, label in periods %}
+            <a href="?period={{ key }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if current_period == key %}bg-amber-500 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Orders</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_orders|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Revenue</p>
+                    <p class="text-2xl font-bold text-green-600">{{ total_revenue|floatformat:2|intcomma }} SAR</p>
+                </div>
+                <div class="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Average Order Value</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ avg_order_value|floatformat:2|intcomma }} SAR</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Completed Orders</p>
+                    <p class="text-2xl font-bold text-amber-600">
+                        {% for status in status_breakdown %}
+                            {% if status.status == 'completed' or status.status == 'delivered' %}
+                                {{ status.count|intcomma }}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+                <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Daily Sales Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Daily Sales Trend</h2>
+            </div>
+            <div class="p-6">
+                <canvas id="dailySalesChart" height="250"></canvas>
+            </div>
+        </div>
+
+        <!-- Order Status Breakdown -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Order Status Breakdown</h2>
+            </div>
+            <div class="p-6">
+                <canvas id="statusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Breakdown Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Orders by Status</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for status in status_breakdown %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if status.status == 'pending' %}
+                                <span class="h-3 w-3 rounded-full bg-yellow-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                {% elif status.status == 'confirmed' %}
+                                <span class="h-3 w-3 rounded-full bg-blue-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Confirmed</span>
+                                {% elif status.status == 'processing' %}
+                                <span class="h-3 w-3 rounded-full bg-purple-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Processing</span>
+                                {% elif status.status == 'shipped' %}
+                                <span class="h-3 w-3 rounded-full bg-indigo-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">Shipped</span>
+                                {% elif status.status == 'delivered' or status.status == 'completed' %}
+                                <span class="h-3 w-3 rounded-full bg-green-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ status.status|title }}</span>
+                                {% elif status.status == 'cancelled' %}
+                                <span class="h-3 w-3 rounded-full bg-red-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                                {% elif status.status == 'returned' %}
+                                <span class="h-3 w-3 rounded-full bg-orange-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Returned</span>
+                                {% else %}
+                                <span class="h-3 w-3 rounded-full bg-gray-400 mr-3"></span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ status.status|title }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            {{ status.count|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ status.total|floatformat:2|intcomma }} SAR
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-1 h-2 bg-gray-200 rounded-full mr-3 max-w-[100px]">
+                                    {% widthratio status.count total_orders 100 as pct %}
+                                    <div class="h-2 bg-amber-500 rounded-full" style="width: {{ pct }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500">{% widthratio status.count total_orders 100 %}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'dashboard:sales_by_period' current_period %}?status={{ status.status }}" class="text-amber-600 hover:text-amber-900">
+                                <i class="fas fa-eye mr-1"></i>View Orders
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg font-medium">No orders found</p>
+                                <p class="text-sm">There are no orders for the selected period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Daily Sales Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Daily Sales Details</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Order Value</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for day in daily_sales reversed %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            {{ day.date|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ day.count|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ day.total|floatformat:2|intcomma }} SAR
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if day.count > 0 %}
+                            {% widthratio day.total day.count 1 as avg %}
+                            {{ avg|floatformat:2|intcomma }} SAR
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <p class="text-sm">No daily sales data available.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Daily Sales Chart
+    const dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
+    const dailyData = {{ daily_sales|safe }};
+
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: dailyData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Revenue (SAR)',
+                data: dailyData.map(d => d.total || 0),
+                borderColor: 'rgb(245, 158, 11)',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' SAR';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusData = {{ status_breakdown|safe }};
+
+    const statusColors = {
+        'pending': '#FBBF24',
+        'confirmed': '#3B82F6',
+        'processing': '#8B5CF6',
+        'shipped': '#6366F1',
+        'delivered': '#10B981',
+        'completed': '#10B981',
+        'cancelled': '#EF4444',
+        'returned': '#F97316'
+    };
+
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1)),
+            datasets: [{
+                data: statusData.map(s => s.count),
+                backgroundColor: statusData.map(s => statusColors[s.status] || '#9CA3AF'),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

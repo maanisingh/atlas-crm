@@ -3,8 +3,18 @@
 import django.db.models.deletion
 import django.utils.timezone
 import orders.models
+import uuid
 from django.conf import settings
 from django.db import migrations, models
+
+
+def simple_order_code():
+    """Simple order code generator for migrations"""
+    import random
+    from django.utils import timezone
+    today = timezone.now().date()
+    date_part = f"{today.year % 100:02d}{today.month:02d}{today.day:02d}"
+    return f"#{date_part}{random.randint(1, 999):03d}"
 
 
 class Migration(migrations.Migration):
@@ -86,7 +96,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='order',
             name='order_code',
-            field=models.CharField(default=orders.models.generate_order_code, max_length=50, unique=True, verbose_name='Order Code'),
+            field=models.CharField(default=simple_order_code, max_length=50, unique=True, verbose_name='Order Code'),
         ),
         migrations.AddField(
             model_name='order',

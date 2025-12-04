@@ -1,0 +1,24 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Return Details" %}</title>
+</head>
+<body>
+    <h1>{% trans "Return Details" %}</h1>
+    <div class="return-details">
+        <p>Return Code: {{ return.return_code }}</p>
+        <p>Status: {{ return.return_status }}</p>
+        <p>Description: {{ return.return_description }}</p>
+        <p>Order: {{ return.order.order_code }}</p>
+    </div>
+    <div class="return-items">
+        <h2>{% trans "Items" %}</h2>
+        {% for item in return_items %}
+            <div class="item">
+                <p>{{ item.order_item.product.name_en }} - Qty: {{ item.quantity }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

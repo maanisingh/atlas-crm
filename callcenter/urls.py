@@ -38,5 +38,13 @@ urlpatterns = [
     path('fix-unassigned-orders/', views.fix_all_unassigned_orders, name='fix_unassigned_orders'),
     path('force-assign-orders/', views.force_assign_orders, name='force_assign_orders'),
     path('create-test-orders/', views.create_test_orders, name='create_test_orders'),
-    
+
+    # Phase 4: Enhanced Dashboard & Bulk Operations
+    path('enhanced-dashboard/', views.enhanced_dashboard, name='enhanced_dashboard'),
+    path('api/real-time-metrics/', views.real_time_metrics, name='real_time_metrics'),
+    path('bulk/operations/', views.bulk_operations_panel, name='bulk_operations'),
+    path('bulk/assign-orders/', views.bulk_assign_orders, name='bulk_assign_orders'),
+    path('bulk/update-status/', views.bulk_update_order_status, name='bulk_update_status'),
+    path('bulk/create-followups/', views.bulk_create_followups, name='bulk_create_followups'),
+    path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
 ]

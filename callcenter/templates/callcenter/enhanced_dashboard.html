@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Enhanced Call Center Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .status-available { background-color: #10b981; }
+    .status-busy { background-color: #f59e0b; }
+    .status-break { background-color: #6b7280; }
+
+    .pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Enhanced Call Center Dashboard</h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Real-time metrics and performance tracking
+                <span class="ml-4 text-xs text-gray-500">
+                    Last updated: <span id="last-update">{{ current_time|date:"H:i:s" }}</span>
+                    <span class="status-indicator status-available pulse ml-2"></span>
+                </span>
+            </p>
+        </div>
+
+        <!-- Real-Time Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="metric-value" id="active-agents">{{ active_agents }}</div>
+                <div class="metric-label">Active Agents</div>
+                <div class="text-sm mt-2 opacity-75">of {{ total_agents }} logged in today</div>
+            </div>
+
+            <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="metric-value" id="today-calls">{{ today_stats.total_calls|default:0 }}</div>
+                <div class="metric-label">Total Calls Today</div>
+                <div class="text-sm mt-2 opacity-75">
+                    {{ today_stats.completed_calls|default:0 }} completed
+                </div>
+            </div>
+
+            <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="metric-value" id="confirmed-orders">{{ order_stats.confirmed_orders|default:0 }}</div>
+                <div class="metric-label">Confirmed Orders</div>
+                <div class="text-sm mt-2 opacity-75">
+                    {{ order_stats.total_orders|default:0 }} total today
+                </div>
+            </div>
+
+            <div class="metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="metric-value" id="avg-satisfaction">
+                    {{ today_stats.average_satisfaction|floatformat:1|default:"N/A" }}
+                </div>
+                <div class="metric-label">Avg Customer Satisfaction</div>
+                <div class="text-sm mt-2 opacity-75">out of 5.0</div>
+            </div>
+        </div>
+
+        <!-- Alerts & Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Pending Follow-ups</h3>
+                <div class="text-4xl font-bold text-orange-600">{{ pending_followups }}</div>
+                <p class="text-sm text-gray-600 mt-2">Require attention soon</p>
+                <a href="{% url 'callcenter:agent_order_list' %}?filter=followup"
+                   class="mt-4 inline-block text-orange-600 hover:text-orange-700 text-sm font-medium">
+                    View all →
+                </a>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Escalated Issues</h3>
+                <div class="text-4xl font-bold text-red-600">{{ escalated_count }}</div>
+                <p class="text-sm text-gray-600 mt-2">Need management review</p>
+                <a href="{% url 'callcenter:manager_order_list' %}?filter=escalated"
+                   class="mt-4 inline-block text-red-600 hover:text-red-700 text-sm font-medium">
+                    Review issues →
+                </a>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Pending Orders</h3>
+                <div class="text-4xl font-bold text-blue-600">{{ order_stats.pending_orders|default:0 }}</div>
+                <p class="text-sm text-gray-600 mt-2">Awaiting confirmation</p>
+                <a href="{% url 'callcenter:bulk_operations' %}"
+                   class="mt-4 inline-block text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Bulk operations →
+                </a>
+            </div>
+        </div>
+
+        <!-- Agent Status Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="chart-container">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Agent Status Distribution</h3>
+                <div class="space-y-3">
+                    {% for stat in session_stats %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="status-indicator status-{{ stat.status|lower }}"></span>
+                            <span class="text-sm font-medium text-gray-700 capitalize">{{ stat.status }}</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ stat.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No active sessions</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performers Today</h3>
+                <div class="space-y-3">
+                    {% for performer in top_performers %}
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ performer.agent.get_full_name }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ performer.total_calls_made }} calls
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-green-600">
+                                {{ performer.orders_confirmed }} confirmed
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ performer.customer_satisfaction_avg|floatformat:1 }}★
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No performance data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Call Activity -->
+        <div class="chart-container mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hourly Call Activity</h3>
+            <div id="hourly-chart" class="h-64"></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="{% url 'callcenter:bulk_operations' %}"
+                   class="flex flex-col items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                    <svg class="w-8 h-8 text-blue-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">Bulk Operations</span>
+                </a>
+
+                <a href="{% url 'callcenter:distribute_orders' %}"
+                   class="flex flex-col items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition">
+                    <svg class="w-8 h-8 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">Auto Distribute</span>
+                </a>
+
+                <a href="{% url 'callcenter:export_orders_csv' %}"
+                   class="flex flex-col items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition">
+                    <svg class="w-8 h-8 text-purple-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">Export CSV</span>
+                </a>
+
+                <a href="{% url 'callcenter:manager_agent_reports' %}"
+                   class="flex flex-col items-center justify-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition">
+                    <svg class="w-8 h-8 text-orange-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">View Reports</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Real-time updates
+function updateMetrics() {
+    fetch('{% url "callcenter:real_time_metrics" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('active-agents').textContent = data.agents.active;
+            document.getElementById('today-calls').textContent = data.calls.today_total;
+            document.getElementById('confirmed-orders').textContent = data.orders.confirmed_today;
+
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleTimeString();
+        })
+        .catch(error => console.error('Error updating metrics:', error));
+}
+
+// Update every 30 seconds
+setInterval(updateMetrics, 30000);
+
+// Simple hourly chart visualization
+const hourlyData = {{ hourly_calls|safe }};
+console.log('Hourly data:', hourlyData);
+</script>
+{% endblock %}

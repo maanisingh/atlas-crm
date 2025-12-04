@@ -23,7 +23,7 @@ class CallLog(models.Model):
         ('follow_up_required', 'Follow Up Required'),
     )
     
-    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    # Using default BigAutoField instead of UUID to maintain compatibility with migrations
     order = models.ForeignKey('orders.Order', on_delete=models.CASCADE, related_name='call_logs')
     agent = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='call_logs')
     call_time = models.DateTimeField(default=timezone.now, verbose_name='Call Time')

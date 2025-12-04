@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Inventory Alerts - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">Inventory Alerts</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Inventory Alerts</h1>
+            <a href="{% url 'dashboard:index' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Alerts</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.total_alerts }}</p>
+                </div>
+                <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-red-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Critical</p>
+                    <p class="text-2xl font-bold text-red-600">{{ summary.critical_alerts }}</p>
+                </div>
+                <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times-circle text-red-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-orange-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Low Stock</p>
+                    <p class="text-2xl font-bold text-orange-600">{{ summary.low_stock_alerts }}</p>
+                </div>
+                <div class="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-boxes text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active Reservations</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ summary.active_reservations }}</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <form method="GET" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select name="priority" class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">All Priorities</option>
+                    {% for key, label in priorities %}
+                    <option value="{{ key }}" {% if current_priority == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select name="type" class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">All Types</option>
+                    {% for key, label in alert_types %}
+                    <option value="{{ key }}" {% if current_type == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500">
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="resolved" {% if current_status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alerts Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alert</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warehouse</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for alert in alerts %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if alert.alert_type == 'out_of_stock' %}
+                                <span class="flex-shrink-0 h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                                    <i class="fas fa-times text-red-600"></i>
+                                </span>
+                                {% elif alert.alert_type == 'low_stock' %}
+                                <span class="flex-shrink-0 h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <i class="fas fa-arrow-down text-orange-600"></i>
+                                </span>
+                                {% else %}
+                                <span class="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-info text-blue-600"></i>
+                                </span>
+                                {% endif %}
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">{{ alert.title }}</p>
+                                    <p class="text-xs text-gray-500">{{ alert.get_alert_type_display }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if alert.product %}
+                            <span class="text-sm text-gray-900">{{ alert.product.name_en }}</span>
+                            {% else %}
+                            <span class="text-sm text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if alert.warehouse %}
+                            <span class="text-sm text-gray-900">{{ alert.warehouse.name }}</span>
+                            {% else %}
+                            <span class="text-sm text-gray-400">All</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if alert.priority == 'critical' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Critical</span>
+                            {% elif alert.priority == 'high' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">High</span>
+                            {% elif alert.priority == 'medium' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Medium</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Low</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ alert.current_quantity|default:0 }} / {{ alert.threshold_quantity|default:'-' }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ alert.created_at|timesince }} ago
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if alert.is_resolved %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Resolved</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'dashboard:inventory_alert_detail' alert.id %}" class="text-amber-600 hover:text-amber-900">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <i class="fas fa-check-circle text-4xl mb-3 text-green-300"></i>
+                                <p class="text-lg font-medium">No alerts found</p>
+                                <p class="text-sm">All inventory levels are within normal parameters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

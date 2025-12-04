@@ -1,0 +1,15 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Process Refund" %}</title>
+</head>
+<body>
+    <h1>{% trans "Process Refund" %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Process Refund" %}</button>
+    </form>
+</body>
+</html>

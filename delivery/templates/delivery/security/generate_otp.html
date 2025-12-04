@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Generate OTP" %} - {{ delivery.tracking_number }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-gray-600">
+            <li><a href="{% url 'delivery:delivery_list' %}" class="hover:text-blue-600">{% trans "Deliveries" %}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{% url 'delivery:delivery_detail' delivery.id %}" class="hover:text-blue-600">{{ delivery.tracking_number }}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">{% trans "Generate OTP" %}</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Generate OTP for Delivery" %}</h1>
+                <p class="text-gray-600">{% trans "Create a one-time password for secure delivery verification" %}</p>
+            </div>
+            <div class="flex-shrink-0">
+                <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Information Card -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Delivery Information" %}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Tracking Number" %}</p>
+                <p class="font-mono font-semibold text-lg text-blue-600">{{ delivery.tracking_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Status" %}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    {{ delivery.get_status_display }}
+                </span>
+            </div>
+            {% if delivery.order %}
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Order Number" %}</p>
+                <p class="font-medium text-gray-900">{{ delivery.order.order_number }}</p>
+            </div>
+            {% endif %}
+            {% if delivery.courier %}
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Courier" %}</p>
+                <p class="font-medium text-gray-900">{{ delivery.courier.user.get_full_name }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- OTP Generation Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ form.non_field_errors }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Customer Phone Field -->
+            <div>
+                <label for="{{ form.customer_phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.customer_phone.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.customer_phone }}
+                {% if form.customer_phone.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.customer_phone.help_text }}</p>
+                {% endif %}
+                {% if form.customer_phone.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.customer_phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Customer Email Field -->
+            <div>
+                <label for="{{ form.customer_email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.customer_email.label }}
+                </label>
+                {{ form.customer_email }}
+                {% if form.customer_email.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.customer_email.help_text }}</p>
+                {% endif %}
+                {% if form.customer_email.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.customer_email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Send Via Field -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.send_via.label }} <span class="text-red-500">*</span>
+                </label>
+                <div class="space-y-2">
+                    {% for checkbox in form.send_via %}
+                    <div class="flex items-center">
+                        {{ checkbox.tag }}
+                        <label for="{{ checkbox.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            {{ checkbox.choice_label }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if form.send_via.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.send_via.help_text }}</p>
+                {% endif %}
+                {% if form.send_via.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.send_via.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">{% trans "OTP Details" %}</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>{% trans "A 6-digit OTP will be generated" %}</li>
+                                <li>{% trans "Valid for 15 minutes" %}</li>
+                                <li>{% trans "Maximum 3 verification attempts" %}</li>
+                                <li>{% trans "OTP will be sent to the selected channels" %}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{% url 'delivery:delivery_detail' delivery.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {% trans "Generate OTP" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

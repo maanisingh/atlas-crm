@@ -38,8 +38,9 @@ urlpatterns = [
     # API endpoints
     path('api/users/', include('users.api_urls')),
     path('api/callcenter/', include('callcenter.api_urls')),
-    path('packaging/', include('packaging.urls')),
+    path('packaging/', include('order_packaging.urls')),
     path('delivery/', include('delivery.urls', namespace='delivery')),
+    path('delivery/security/', include('delivery.security_urls', namespace='security')),
     path('finance/', include('finance.urls')),
     path('subscribers/', include('subscribers.urls', namespace='subscribers')),
     path('roles/', include('roles.urls')),
@@ -47,6 +48,8 @@ urlpatterns = [
     path('bug-reports/', include('bug_reports.urls')),
     path('stock-keeper/', include('stock_keeper.urls')),
     path('notifications/', include('notifications.urls')),
+    # Analytics API
+    path('analytics/', include('analytics.urls')),
     # Landing pages
     path('', include('landing.urls')),
     path('i18n/', include('django.conf.urls.i18n')),

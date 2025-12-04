@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify OTP" %} - {{ delivery.tracking_number }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-gray-600">
+            <li><a href="{% url 'delivery:delivery_list' %}" class="hover:text-blue-600">{% trans "Deliveries" %}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{% url 'delivery:delivery_detail' delivery.id %}" class="hover:text-blue-600">{{ delivery.tracking_number }}</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">{% trans "Verify OTP" %}</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Verify OTP" %}</h1>
+                <p class="text-gray-600">{% trans "Enter the 6-digit code sent to the customer" %}</p>
+            </div>
+            <div class="flex-shrink-0">
+                <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Status Card -->
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{% trans "OTP Information" %}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Customer Phone" %}</p>
+                <p class="font-medium text-gray-900">{{ otp.customer_phone }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Status" %}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                    {{ otp.get_status_display }}
+                </span>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Expires At" %}</p>
+                <p class="font-medium text-gray-900">{{ otp.expires_at|date:"M d, Y H:i" }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1">{% trans "Attempts Used" %}</p>
+                <p class="font-medium text-gray-900">{{ otp.attempts }} / {{ otp.max_attempts }}</p>
+            </div>
+        </div>
+
+        <!-- Time Remaining -->
+        {% if otp.expires_at > now %}
+        <div class="mt-4 pt-4 border-t border-green-200">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-sm text-green-800">
+                    <span class="font-semibold">{% trans "Time remaining:" %}</span>
+                    <span id="countdown" class="font-mono ml-2"></span>
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Verification Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ form.non_field_errors }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- OTP Code Field -->
+            <div>
+                <label for="{{ form.otp_code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.otp_code.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.otp_code }}
+                {% if form.otp_code.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.otp_code.help_text }}</p>
+                {% endif %}
+                {% if form.otp_code.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.otp_code.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Optional: GPS Coordinates -->
+            <div class="border-t border-gray-200 pt-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-3">{% trans "Delivery Location (Optional)" %}</h3>
+                <p class="text-xs text-gray-500 mb-3">{% trans "Enter coordinates to verify delivery location within geofence" %}</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.delivery_latitude.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.delivery_latitude.label }}
+                        </label>
+                        {{ form.delivery_latitude }}
+                        {% if form.delivery_latitude.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.delivery_latitude.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.delivery_longitude.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.delivery_longitude.label }}
+                        </label>
+                        {{ form.delivery_longitude }}
+                        {% if form.delivery_longitude.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.delivery_longitude.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="button" id="get-location" class="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {% trans "Use my current location" %}
+                </button>
+            </div>
+
+            <!-- Security Info -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">{% trans "Security Notice" %}</h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>{% trans "OTP is valid for one-time use only" %}</li>
+                                <li>{% trans "You have" %} {{ otp.max_attempts|add:"-"|add:otp.attempts }} {% trans "attempts remaining" %}</li>
+                                <li>{% trans "Incorrect attempts may trigger fraud detection" %}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{% url 'delivery:delivery_detail' delivery.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {% trans "Verify OTP" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for countdown timer and geolocation -->
+<script>
+    // Countdown timer
+    {% if otp.expires_at > now %}
+    const expiresAt = new Date("{{ otp.expires_at.isoformat }}");
+    const countdownElement = document.getElementById('countdown');
+
+    function updateCountdown() {
+        const now = new Date();
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            countdownElement.textContent = 'EXPIRED';
+            countdownElement.classList.add('text-red-600', 'font-bold');
+            return;
+        }
+
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    {% endif %}
+
+    // Geolocation
+    document.getElementById('get-location')?.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('{{ form.delivery_latitude.id_for_label }}').value = position.coords.latitude.toFixed(6);
+                document.getElementById('{{ form.delivery_longitude.id_for_label }}').value = position.coords.longitude.toFixed(6);
+            }, function(error) {
+                alert('Error getting location: ' + error.message);
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+</script>
+{% endblock %}

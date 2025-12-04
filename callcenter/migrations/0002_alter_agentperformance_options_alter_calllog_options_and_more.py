@@ -163,11 +163,9 @@ class Migration(migrations.Migration):
             name='duration',
             field=models.PositiveIntegerField(default=0, verbose_name='Duration (seconds)'),
         ),
-        migrations.AlterField(
-            model_name='calllog',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Removed: migrations.AlterField for CallLog.id from BigAutoField to UUIDField
+        # This causes PostgreSQL errors - cannot cast bigint to uuid
+        # Keeping BigAutoField for CallLog.id
         migrations.AlterField(
             model_name='calllog',
             name='notes',

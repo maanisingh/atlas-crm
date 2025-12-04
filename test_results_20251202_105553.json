@@ -1,0 +1,42 @@
+{
+  "passed": 24,
+  "failed": 9,
+  "errors": [
+    {
+      "test": "Executive Summary - Status: 500",
+      "details": null
+    },
+    {
+      "test": "Order Analytics - Status: 500",
+      "details": null
+    },
+    {
+      "test": "Admin Dashboard - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "JSON Executive Summary - Status: 500",
+      "details": null
+    },
+    {
+      "test": "JSON Orders - Status: 500",
+      "details": null
+    },
+    {
+      "test": "Order Statistics - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "Product List - Status: 500",
+      "details": null
+    },
+    {
+      "test": "Low Stock Alerts - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "Delivery Dashboard - Not Found (404)",
+      "details": null
+    }
+  ]
+}

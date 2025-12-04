@@ -1,0 +1,26 @@
+{
+  "passed": 28,
+  "failed": 5,
+  "errors": [
+    {
+      "test": "Admin Dashboard - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "Order Statistics - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "Product List - Status: 500",
+      "details": null
+    },
+    {
+      "test": "Low Stock Alerts - Not Found (404)",
+      "details": null
+    },
+    {
+      "test": "Delivery Dashboard - Not Found (404)",
+      "details": null
+    }
+  ]
+}

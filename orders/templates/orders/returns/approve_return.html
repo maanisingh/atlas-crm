@@ -1,0 +1,15 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Approve/Reject Return" %}</title>
+</head>
+<body>
+    <h1>{% trans "Approve or Reject Return" %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Submit Decision" %}</button>
+    </form>
+</body>
+</html>

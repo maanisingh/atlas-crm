@@ -3190,3 +3190,393 @@ def resolve_order(request, order_id):
         return JsonResponse({'success': False, 'error': f'حدث خطأ: {str(e)}'})
     
     return JsonResponse({'success': False, 'error': 'طريقة طلب غير صحيحة'})
+
+# Enhanced Dashboard Views for Phase 4
+
+@login_required
+@user_passes_test(has_callcenter_role)
+def enhanced_dashboard(request):
+    """Enhanced call center dashboard with real-time metrics."""
+    from django.db.models.functions import TruncDate, TruncHour
+    
+    today = timezone.now().date()
+    now = timezone.now()
+    start_of_day = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+    
+    # Real-time agent metrics
+    active_agents = AgentSession.objects.filter(
+        status__in=['available', 'busy'],
+        last_activity__gte=now - timedelta(minutes=5)
+    ).count()
+    
+    total_agents = AgentSession.objects.filter(
+        login_time__gte=start_of_day
+    ).values('agent').distinct().count()
+    
+    # Today's call statistics
+    today_calls = CallLog.objects.filter(call_time__gte=start_of_day)
+    today_stats = today_calls.aggregate(
+        total_calls=Count('id'),
+        completed_calls=Count('id', filter=Q(status='completed')),
+        average_duration=Avg('duration'),
+        average_satisfaction=Avg('customer_satisfaction', filter=Q(customer_satisfaction__isnull=False))
+    )
+    
+    # Order statistics
+    today_orders = Order.objects.filter(created_at__gte=start_of_day)
+    order_stats = today_orders.aggregate(
+        total_orders=Count('id'),
+        confirmed_orders=Count('id', filter=Q(status='CONFIRMED')),
+        cancelled_orders=Count('id', filter=Q(status='CANCELLED')),
+        pending_orders=Count('id', filter=Q(status='PENDING'))
+    )
+    
+    # Hourly performance data for charts
+    hourly_calls = CallLog.objects.filter(
+        call_time__gte=start_of_day
+    ).annotate(
+        hour=TruncHour('call_time')
+    ).values('hour').annotate(
+        count=Count('id')
+    ).order_by('hour')
+    
+    # Top performers today
+    top_performers = AgentPerformance.objects.filter(
+        date=today
+    ).select_related('agent').order_by('-orders_confirmed')[:5]
+    
+    # Active sessions by status
+    session_stats = AgentSession.objects.filter(
+        last_activity__gte=now - timedelta(minutes=10)
+    ).values('status').annotate(count=Count('id'))
+    
+    # Pending follow-ups
+    pending_followups = CustomerInteraction.objects.filter(
+        follow_up_date__lte=now + timedelta(days=1),
+        resolution_status='follow_up_required'
+    ).count()
+    
+    # Escalated issues
+    escalated_count = CustomerInteraction.objects.filter(
+        resolution_status='escalated',
+        interaction_time__gte=start_of_day
+    ).count()
+    
+    context = {
+        'active_agents': active_agents,
+        'total_agents': total_agents,
+        'today_stats': today_stats,
+        'order_stats': order_stats,
+        'hourly_calls': list(hourly_calls),
+        'top_performers': top_performers,
+        'session_stats': list(session_stats),
+        'pending_followups': pending_followups,
+        'escalated_count': escalated_count,
+        'current_time': now,
+    }
+    
+    return render(request, 'callcenter/enhanced_dashboard.html', context)
+
+
+@login_required
+@user_passes_test(has_callcenter_role)
+def real_time_metrics(request):
+    """API endpoint for real-time dashboard metrics."""
+    now = timezone.now()
+    today = now.date()
+    start_of_day = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+    
+    # Get current metrics
+    active_agents = AgentSession.objects.filter(
+        status__in=['available', 'busy'],
+        last_activity__gte=now - timedelta(minutes=5)
+    )
+    
+    metrics = {
+        'timestamp': now.isoformat(),
+        'agents': {
+            'active': active_agents.count(),
+            'available': active_agents.filter(status='available').count(),
+            'busy': active_agents.filter(status='busy').count(),
+            'on_break': AgentSession.objects.filter(
+                status='break',
+                last_activity__gte=now - timedelta(minutes=30)
+            ).count(),
+        },
+        'calls': {
+            'today_total': CallLog.objects.filter(call_time__gte=start_of_day).count(),
+            'last_hour': CallLog.objects.filter(
+                call_time__gte=now - timedelta(hours=1)
+            ).count(),
+            'in_progress': AgentSession.objects.filter(
+                status='busy',
+                last_activity__gte=now - timedelta(minutes=5)
+            ).count(),
+        },
+        'orders': {
+            'pending': Order.objects.filter(status='PENDING').count(),
+            'confirmed_today': Order.objects.filter(
+                status='CONFIRMED',
+                updated_at__gte=start_of_day
+            ).count(),
+        },
+        'alerts': {
+            'pending_followups': CustomerInteraction.objects.filter(
+                follow_up_date__lte=now + timedelta(hours=2),
+                resolution_status='follow_up_required'
+            ).count(),
+            'escalated': CustomerInteraction.objects.filter(
+                resolution_status='escalated',
+                interaction_time__gte=start_of_day
+            ).count(),
+        }
+    }
+    
+    return JsonResponse(metrics)
+
+# Bulk Operations Views
+
+@login_required
+@user_passes_test(is_call_center_manager)
+@require_POST
+def bulk_assign_orders(request):
+    """Bulk assign orders to agents."""
+    try:
+        order_ids = request.POST.getlist('order_ids[]')
+        agent_id = request.POST.get('agent_id')
+        priority = request.POST.get('priority', 'medium')
+        notes = request.POST.get('notes', '')
+        
+        if not order_ids or not agent_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'Order IDs and Agent ID are required'
+            }, status=400)
+        
+        agent = get_object_or_404(User, id=agent_id)
+        orders = Order.objects.filter(id__in=order_ids)
+        
+        assignments_created = 0
+        for order in orders:
+            OrderAssignment.objects.create(
+                order=order,
+                manager=request.user,
+                agent=agent,
+                priority_level=priority,
+                manager_notes=notes
+            )
+            
+            # Update order agent
+            order.call_center_agent = agent
+            order.save()
+            
+            assignments_created += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully assigned {assignments_created} orders to {agent.get_full_name()}',
+            'assigned_count': assignments_created
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error assigning orders: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_call_center_manager)
+@require_POST
+def bulk_update_order_status(request):
+    """Bulk update order status."""
+    try:
+        order_ids = request.POST.getlist('order_ids[]')
+        new_status = request.POST.get('status')
+        reason = request.POST.get('reason', '')
+        
+        if not order_ids or not new_status:
+            return JsonResponse({
+                'success': False,
+                'message': 'Order IDs and status are required'
+            }, status=400)
+        
+        orders = Order.objects.filter(id__in=order_ids)
+        updated_count = 0
+        
+        for order in orders:
+            old_status = order.status
+            order.status = new_status
+            order.save()
+            
+            # Create status history
+            OrderStatusHistory.objects.create(
+                order=order,
+                agent=request.user,
+                changed_by=request.user,
+                previous_status=old_status,
+                new_status=new_status,
+                status_change_reason=reason
+            )
+            
+            updated_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully updated {updated_count} orders',
+            'updated_count': updated_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating orders: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_call_center_manager)
+def bulk_operations_panel(request):
+    """Bulk operations management panel."""
+    from django.core.paginator import Paginator
+
+    # Get available agents with their session status
+    available_agents = User.objects.filter(
+        is_active=True,
+        user_roles__role__name__icontains='Call Center'
+    ).select_related('agentsession_set__agent').distinct()
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    date_range = request.GET.get('date_range', 'today')
+    priority_filter = request.GET.get('priority', '')
+
+    # Build query
+    orders = Order.objects.select_related('customer').prefetch_related('assignments__agent')
+
+    # Apply status filter
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    # Apply date range filter
+    today = timezone.now().date()
+    if date_range == 'today':
+        start_date = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+        orders = orders.filter(created_at__gte=start_date)
+    elif date_range == 'week':
+        start_date = today - timedelta(days=7)
+        orders = orders.filter(created_at__gte=start_date)
+    elif date_range == 'month':
+        start_date = today - timedelta(days=30)
+        orders = orders.filter(created_at__gte=start_date)
+
+    # Apply priority filter (if orders have priority on assignments)
+    if priority_filter:
+        orders = orders.filter(assignments__priority_level=priority_filter)
+
+    # Order by created date descending
+    orders = orders.order_by('-created_at').distinct()
+
+    # Pagination
+    paginator = Paginator(orders, 50)  # 50 orders per page
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'available_agents': available_agents,
+        'orders': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+    }
+
+    return render(request, 'callcenter/bulk_operations.html', context)
+
+
+@login_required
+@user_passes_test(has_callcenter_role)
+@require_POST
+def bulk_create_followups(request):
+    """Bulk create follow-up interactions for orders."""
+    try:
+        order_ids = request.POST.getlist('order_ids[]')
+        followup_date_str = request.POST.get('followup_date')
+        notes = request.POST.get('notes', '')
+        
+        if not order_ids or not followup_date_str:
+            return JsonResponse({
+                'success': False,
+                'message': 'Order IDs and follow-up date are required'
+            }, status=400)
+        
+        followup_date = datetime.fromisoformat(followup_date_str)
+        orders = Order.objects.filter(id__in=order_ids)
+        
+        created_count = 0
+        for order in orders:
+            CustomerInteraction.objects.create(
+                order=order,
+                agent=request.user,
+                customer=order.customer,
+                interaction_type='follow_up',
+                resolution_status='follow_up_required',
+                interaction_notes=notes,
+                follow_up_date=followup_date
+            )
+            created_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully created {created_count} follow-ups',
+            'created_count': created_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error creating follow-ups: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@user_passes_test(has_callcenter_role)
+def export_orders_csv(request):
+    """Export orders to CSV."""
+    import csv
+    from django.http import HttpResponse
+    
+    order_ids = request.GET.getlist('order_ids[]')
+    status_filter = request.GET.get('status')
+    
+    # Build query
+    query = Order.objects.all()
+    if order_ids:
+        query = query.filter(id__in=order_ids)
+    if status_filter:
+        query = query.filter(status=status_filter)
+    
+    query = query.select_related('customer', 'call_center_agent')[:1000]
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="orders_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    response.write('\ufeff')  # UTF-8 BOM for Excel
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'Order ID', 'Customer Name', 'Customer Phone', 'Status',
+        'Agent', 'Created Date', 'Total Amount', 'Payment Status'
+    ])
+    
+    for order in query:
+        writer.writerow([
+            order.id,
+            order.customer.get_full_name() if order.customer else 'N/A',
+            order.customer_phone or 'N/A',
+            order.status,
+            order.call_center_agent.get_full_name() if order.call_center_agent else 'Unassigned',
+            order.created_at.strftime('%Y-%m-%d %H:%M'),
+            order.total_amount,
+            order.payment_status
+        ])
+    
+    return response

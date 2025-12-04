@@ -26,15 +26,24 @@ class UserManager(BaseUserManager):
         # Only set approval status for new users (not existing ones being updated)
         # Check if this is a new user by looking for pk
         if not user.pk:
-            # Set new users as inactive and pending approval (unless they're superuser or created by admin)
+            # Check if is_active and approval_status were explicitly provided
+            is_active_provided = 'is_active' in extra_fields
+            approval_status_provided = 'approval_status' in extra_fields
+
+            # Set new users as inactive and pending approval (unless they're superuser, created by admin, or explicitly set)
             if not extra_fields.get('is_superuser', False) and not is_admin_creating:
-                user.is_active = False
-                user.approval_status = 'pending'
+                # Only override if not explicitly provided (e.g., in tests)
+                if not is_active_provided:
+                    user.is_active = False
+                if not approval_status_provided:
+                    user.approval_status = 'pending'
                 user.email_verified = False  # Regular users need email verification
             else:
                 # Superusers and admin-created users are automatically active and approved
-                user.is_active = True
-                user.approval_status = 'approved'
+                if not is_active_provided:
+                    user.is_active = True
+                if not approval_status_provided:
+                    user.approval_status = 'approved'
                 user.email_verified = True  # Admin-created users don't need email verification
                 if is_admin_creating:
                     user.approved_by = current_user

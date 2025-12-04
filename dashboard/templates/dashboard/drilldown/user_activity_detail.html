@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Activity: {{ user_obj.get_full_name|default:user_obj.username }} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <a href="{% url 'dashboard:user_activity' %}" class="hover:text-amber-600">User Activity</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">{{ user_obj.get_full_name|default:user_obj.username }}</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">User Activity Details</h1>
+            <a href="{% url 'dashboard:user_activity' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Activity
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- User Profile Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-8 text-center">
+                    <div class="mx-auto h-24 w-24 rounded-full bg-white p-1 mb-4">
+                        {% if user_obj.profile_picture %}
+                        <img src="{{ user_obj.profile_picture.url }}" class="h-full w-full rounded-full object-cover">
+                        {% else %}
+                        <div class="h-full w-full rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-user text-4xl text-gray-400"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h2 class="text-xl font-bold text-white">{{ user_obj.get_full_name|default:user_obj.username }}</h2>
+                    <p class="text-amber-100">{{ user_obj.email }}</p>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span class="text-sm text-gray-500">Role</span>
+                            {% if user_obj.is_superuser %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Super Admin</span>
+                            {% elif user_obj.userrole_set.exists %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ user_obj.userrole_set.first.role.display_name }}</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">User</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span class="text-sm text-gray-500">Status</span>
+                            {% if user_obj.is_active %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span class="text-sm text-gray-500">Phone</span>
+                            <span class="text-sm text-gray-900">{{ user_obj.phone|default:'-' }}</span>
+                        </div>
+
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span class="text-sm text-gray-500">Joined</span>
+                            <span class="text-sm text-gray-900">{{ user_obj.date_joined|date:"M d, Y" }}</span>
+                        </div>
+
+                        <div class="flex items-center justify-between py-2">
+                            <span class="text-sm text-gray-500">Last Login</span>
+                            <span class="text-sm text-gray-900">
+                                {% if user_obj.last_login %}
+                                {{ user_obj.last_login|timesince }} ago
+                                {% else %}
+                                Never
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Activity Summary</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-sign-in-alt text-blue-600"></i>
+                            </span>
+                            <span class="text-sm text-gray-700">Total Logins</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">{{ summary.total_logins|default:0|intcomma }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-mouse-pointer text-purple-600"></i>
+                            </span>
+                            <span class="text-sm text-gray-700">Total Actions</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">{{ summary.total_actions|default:0|intcomma }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-shopping-cart text-green-600"></i>
+                            </span>
+                            <span class="text-sm text-gray-700">Orders Processed</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">{{ summary.orders_processed|default:0|intcomma }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-clock text-amber-600"></i>
+                            </span>
+                            <span class="text-sm text-gray-700">Avg. Session</span>
+                        </div>
+                        <span class="text-lg font-bold text-gray-900">{{ summary.avg_session_duration|default:'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Activity</h2>
+                    <span class="text-sm text-gray-500">Last 30 days</span>
+                </div>
+                <div class="p-6">
+                    {% if activity_logs %}
+                    <div class="flow-root">
+                        <ul role="list" class="-mb-8">
+                            {% for log in activity_logs %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            {% if log.action_type == 'login' %}
+                                            <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-sign-in-alt text-blue-600 text-sm"></i>
+                                            </span>
+                                            {% elif log.action_type == 'logout' %}
+                                            <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-sign-out-alt text-gray-600 text-sm"></i>
+                                            </span>
+                                            {% elif log.action_type == 'create' %}
+                                            <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-plus text-green-600 text-sm"></i>
+                                            </span>
+                                            {% elif log.action_type == 'update' %}
+                                            <span class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-edit text-amber-600 text-sm"></i>
+                                            </span>
+                                            {% elif log.action_type == 'delete' %}
+                                            <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-trash text-red-600 text-sm"></i>
+                                            </span>
+                                            {% elif log.action_type == 'view' %}
+                                            <span class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-eye text-purple-600 text-sm"></i>
+                                            </span>
+                                            {% else %}
+                                            <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-circle text-gray-400 text-sm"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900">
+                                                    {{ log.description|default:log.action_type|title }}
+                                                </p>
+                                                {% if log.details %}
+                                                <p class="text-xs text-gray-500 mt-1">{{ log.details }}</p>
+                                                {% endif %}
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ log.created_at|date:"M d" }}<br>
+                                                <span class="text-xs">{{ log.created_at|time:"H:i" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <div class="text-gray-500">
+                            <i class="fas fa-history text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-lg font-medium">No recent activity</p>
+                            <p class="text-sm">There is no recorded activity for this user.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Activity by Day Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Activity by Day</h3>
+                </div>
+                <div class="p-6">
+                    <canvas id="activityByDayChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Sessions -->
+            {% if sessions %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Sessions</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Login Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for session in sessions %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    {{ session.login_time|date:"M d, Y H:i" }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ session.ip_address|default:'-' }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <span class="truncate max-w-[200px] block" title="{{ session.user_agent }}">
+                                        {{ session.device|default:session.user_agent|truncatechars:30 }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ session.duration|default:'-' }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('activityByDayChart').getContext('2d');
+    const activityData = {{ daily_activity|default:"[]"|safe }};
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: activityData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Actions',
+                data: activityData.map(d => d.count || 0),
+                backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

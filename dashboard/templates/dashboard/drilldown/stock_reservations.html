@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Stock Reservations - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">Stock Reservations</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Stock Reservations</h1>
+            <a href="{% url 'dashboard:index' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Reservations</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.total_reservations }}</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clipboard-list text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-yellow-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ summary.pending_reservations }}</p>
+                </div>
+                <div class="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-blue-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Confirmed</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ summary.confirmed_reservations }}</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Reserved Units</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ summary.total_units|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-boxes text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <form method="GET" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">All Statuses</option>
+                    {% for key, label in statuses %}
+                    <option value="{{ key }}" {% if current_status == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
+                <select name="warehouse" class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">All Warehouses</option>
+                    {% for warehouse in warehouses %}
+                    <option value="{{ warehouse.id }}" {% if current_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>{{ warehouse.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reservations Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warehouse</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for reservation in reservations %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <span class="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-shopping-cart text-blue-600 text-sm"></i>
+                                </span>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">{{ reservation.order.order_code }}</p>
+                                    <p class="text-xs text-gray-500">{{ reservation.order.created_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if reservation.product %}
+                            <p class="text-sm text-gray-900">{{ reservation.product.name_en }}</p>
+                            <p class="text-xs text-gray-500">{{ reservation.product.sku|default:'' }}</p>
+                            {% else %}
+                            <span class="text-sm text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if reservation.warehouse %}
+                            <span class="text-sm text-gray-900">{{ reservation.warehouse.name }}</span>
+                            {% else %}
+                            <span class="text-sm text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            {{ reservation.quantity|intcomma }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if reservation.status == 'pending' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                            {% elif reservation.status == 'confirmed' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Confirmed</span>
+                            {% elif reservation.status == 'fulfilled' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Fulfilled</span>
+                            {% elif reservation.status == 'cancelled' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                            {% elif reservation.status == 'expired' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Expired</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ reservation.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ reservation.created_at|timesince }} ago
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            {% if reservation.expires_at %}
+                                {% if reservation.is_expired %}
+                                <span class="text-red-600 font-medium">Expired</span>
+                                {% else %}
+                                <span class="text-gray-500">{{ reservation.expires_at|date:"M d, H:i" }}</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'dashboard:stock_reservation_detail' reservation.id %}" class="text-amber-600 hover:text-amber-900">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <i class="fas fa-clipboard-check text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg font-medium">No reservations found</p>
+                                <p class="text-sm">There are no stock reservations matching your filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if reservations.has_other_pages %}
+    <div class="mt-6 flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if reservations.has_previous %}
+            <a href="?page={{ reservations.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_warehouse %}&warehouse={{ current_warehouse }}{% endif %}"
+               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            {% for num in reservations.paginator.page_range %}
+                {% if reservations.number == num %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-amber-500 bg-amber-50 text-sm font-medium text-amber-600">{{ num }}</span>
+                {% elif num > reservations.number|add:'-3' and num < reservations.number|add:'3' %}
+                <a href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_warehouse %}&warehouse={{ current_warehouse }}{% endif %}"
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if reservations.has_next %}
+            <a href="?page={{ reservations.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_warehouse %}&warehouse={{ current_warehouse }}{% endif %}"
+               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

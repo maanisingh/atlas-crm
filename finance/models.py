@@ -14,6 +14,7 @@ def generate_payment_id():
 class Payment(models.Model):
     PAYMENT_METHODS = (
         ('cash', 'Cash'),
+        ('cod', 'Cash on Delivery (COD)'),
         ('credit_card', 'Credit Card'),
         ('bank_transfer', 'Bank Transfer'),
         ('paypal', 'PayPal'),
@@ -359,3 +360,7 @@ class PlatformSyncLog(models.Model):
         if self.completed_at:
             return self.completed_at - self.started_at
         return timezone.now() - self.started_at
+
+
+# Import COD models
+from .cod_models import CODPayment, CODReconciliation

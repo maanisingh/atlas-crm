@@ -54,16 +54,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     # REST Framework
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     # Cloudinary
     'cloudinary',
     'cloudinary_storage',
-    # 2FA packages (commented out for now)
-    # 'django_otp',
-    # 'django_otp.plugins.otp_totp',
-    # 'django_otp.plugins.otp_static',
+    # Security packages
+    'axes',  # Login attempt tracking and lockout
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
+    # Celery
+    'django_celery_beat',
+    'django_celery_results',
     # Custom apps
     'dashboard',
     'users',
@@ -73,7 +79,7 @@ INSTALLED_APPS = [
     'callcenter',
     'callcenter_manager',
     'callcenter_agent',
-    'packaging',
+    'order_packaging',
     'delivery',
     'finance',
     'settings',
@@ -85,6 +91,7 @@ INSTALLED_APPS = [
     'bug_reports',
     'stock_keeper',
     'notifications',
+    'analytics',  # Analytics and KPIs
 ]
 
 
@@ -101,12 +108,18 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'django_otp.middleware.OTPMiddleware',
+    'django_otp.middleware.OTPMiddleware',  # OTP middleware for 2FA
+    'axes.middleware.AxesMiddleware',  # Login attempt tracking
     'users.middleware_2fa.TwoFactorAuthMiddleware',
-    'users.middleware_2fa.LoginAttemptMiddleware',
-    'packaging.middleware.PackagingAgentAccessMiddleware',  # Restrict Packaging Agent to packaging URLs only
+    'order_packaging.middleware.PackagingAgentAccessMiddleware',  # Restrict Packaging Agent to packaging URLs only
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Authentication backends for axes
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # Axes backend for login tracking
+    'django.contrib.auth.backends.ModelBackend',  # Default Django backend
 ]
 
 ROOT_URLCONF = 'crm_fulfillment.urls'
@@ -135,17 +148,17 @@ WSGI_APPLICATION = 'crm_fulfillment.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Support for environment-based database configuration (Docker)
-DATABASE_TYPE = os.environ.get('DATABASE', 'sqlite').lower()
+DATABASE_TYPE = os.environ.get('DATABASE', 'postgres').lower()
 
 if DATABASE_TYPE == 'postgres':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'crm_db'),
-            'USER': os.environ.get('DB_USER', 'crm_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'crm_password'),
+            'NAME': os.environ.get('DB_NAME', 'atlas_crm'),
+            'USER': os.environ.get('DB_USER', 'atlas_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'atlas_secure_pass_2024'),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'PORT': os.environ.get('DB_PORT', '5433'),
         }
     }
 else:
@@ -293,4 +306,145 @@ CORS_ALLOWED_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://atlas-crmsystem.codixverse.cloud",
     "http://atlas-crmsystem.codixverse.cloud",
+    "https://atlas.alexandratechlab.com",
+    "http://atlas.alexandratechlab.com",
+    "http://localhost:8070",
+    "http://127.0.0.1:8070",
 ]
+
+# Site URL for generating absolute URLs
+SITE_URL = os.environ.get('SITE_URL', 'https://atlas.alexandratechlab.com')
+
+# ============================================
+# SECURITY CONFIGURATION
+# ============================================
+
+# Django-Axes Configuration (Login attempt tracking and lockout)
+AXES_FAILURE_LIMIT = 5  # Lock out after 5 failed attempts
+AXES_COOLOFF_TIME = 1  # Lock out for 1 hour (in hours)
+AXES_LOCKOUT_TEMPLATE = 'axes/account_locked.html'
+AXES_RESET_ON_SUCCESS = True  # Reset failed attempts on successful login
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
+AXES_VERBOSE = True
+AXES_LOCKOUT_CALLABLE = None
+AXES_IPWARE_PROXY_ORDER = 'left-most'
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
+    'HTTP_X_FORWARDED_FOR',
+    'REMOTE_ADDR',
+]
+
+# Rate Limiting Configuration
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_FAIL_OPEN = False
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# Session Security
+SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
+# ============================================
+# CELERY CONFIGURATION
+# ============================================
+
+# Redis Configuration
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', f'{REDIS_URL}/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f'{REDIS_URL}/1',
+        'KEY_PREFIX': 'atlas_crm',
+        'TIMEOUT': 300,  # 5 minutes default
+    },
+    'axes': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f'{REDIS_URL}/2',
+    }
+}
+
+# Axes Cache Backend
+AXES_CACHE = 'axes'
+
+# ============================================
+# LOGGING CONFIGURATION
+# ============================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'atlas_crm.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'security_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'security.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'axes': {
+            'handlers': ['security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'atlas_crm': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

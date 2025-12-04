@@ -1,0 +1,114 @@
+
+[94m╔═══════════════════════════════════════════════════════════════════════════╗
+║          ATLAS CRM COMPREHENSIVE API TEST SUITE                          ║
+║          2025-12-02 10:55:48                                              ║
+╚═══════════════════════════════════════════════════════════════════════════╝[0m
+
+
+[94m================================================================================
+AUTHENTICATION TEST
+================================================================================[0m
+
+[92m✓ CSRF token obtained[0m
+[92m✓ Login successful as admin@atlas.com[0m
+
+[94m================================================================================
+ANALYTICS API ENDPOINTS
+================================================================================[0m
+
+[91m✗ Executive Summary - Status: 500[0m
+[91m✗ Order Analytics - Status: 500[0m
+[92m✓ Inventory Analytics - Status: 200[0m
+[93mℹ   Response keys: stock_summary, top_selling, slow_moving[0m
+[92m✓ Finance Analytics - Status: 200[0m
+[93mℹ   Response keys: revenue, payment_methods, outstanding[0m
+[92m✓ Delivery Analytics - Status: 200[0m
+[93mℹ   Response keys: summary, performance[0m
+[92m✓ Call Center Analytics - Status: 200[0m
+[93mℹ   Response keys: summary, agent_performance[0m
+[92m✓ User Analytics - Status: 200[0m
+[93mℹ   Response keys: summary, activity[0m
+[92m✓ Operations KPIs - Status: 200[0m
+[93mℹ   Response keys: order_fulfillment, delivery_performance, stock_health, call_center[0m
+[92m✓ Sales KPIs - Status: 200[0m
+[93mℹ   Response keys: conversion, top_products, payment_methods[0m
+
+[94m================================================================================
+DASHBOARD ENDPOINTS
+================================================================================[0m
+
+[92m✓ Main Dashboard - Status: 200 (HTML response)[0m
+[91m✗ Admin Dashboard - Not Found (404)[0m
+[91m✗ JSON Executive Summary - Status: 500[0m
+[91m✗ JSON Orders - Status: 500[0m
+[92m✓ JSON Inventory - Status: 200[0m
+[92m✓ JSON Finance - Status: 200[0m
+
+[94m================================================================================
+USER MANAGEMENT ENDPOINTS
+================================================================================[0m
+
+[92m✓ User List - Status: 200 (HTML response)[0m
+[92m✓ Profile - Status: 200 (HTML response)[0m
+[92m✓ User Roles - Status: 200 (HTML response)[0m
+
+[94m================================================================================
+ORDER MANAGEMENT ENDPOINTS
+================================================================================[0m
+
+[92m✓ Order List - Status: 200 (HTML response)[0m
+[92m✓ Order Create - Status: 200 (HTML response)[0m
+[91m✗ Order Statistics - Not Found (404)[0m
+
+[94m================================================================================
+INVENTORY ENDPOINTS
+================================================================================[0m
+
+[92m✓ Inventory List - Status: 200 (HTML response)[0m
+[91m✗ Product List - Status: 500[0m
+[91m✗ Low Stock Alerts - Not Found (404)[0m
+
+[94m================================================================================
+CALL CENTER ENDPOINTS
+================================================================================[0m
+
+[92m✓ Call Center Dashboard - Status: 200 (HTML response)[0m
+[92m✓ Call Center Manager - Status: 200 (HTML response)[0m
+[92m✓ Call Center Agent - Status: 200 (HTML response)[0m
+
+[94m================================================================================
+DELIVERY ENDPOINTS
+================================================================================[0m
+
+[92m✓ Delivery List - Status: 200 (HTML response)[0m
+[91m✗ Delivery Dashboard - Not Found (404)[0m
+
+[94m================================================================================
+FINANCE ENDPOINTS
+================================================================================[0m
+
+[92m✓ Finance Dashboard - Status: 200 (HTML response)[0m
+[92m✓ Finance Reports - Status: 200 (HTML response)[0m
+
+[94m================================================================================
+TEST RESULTS SUMMARY
+================================================================================[0m
+
+Total Tests: 33
+[92mPassed: 24[0m
+[91mFailed: 9[0m
+Pass Rate: 72.7%
+
+[91mFailed Tests:[0m
+  • Executive Summary - Status: 500
+  • Order Analytics - Status: 500
+  • Admin Dashboard - Not Found (404)
+  • JSON Executive Summary - Status: 500
+  • JSON Orders - Status: 500
+  • Order Statistics - Not Found (404)
+  • Product List - Status: 500
+  • Low Stock Alerts - Not Found (404)
+  • Delivery Dashboard - Not Found (404)
+
+[94mResults saved to: /root/new-python-code/test_results_20251202_105553.json[0m
+

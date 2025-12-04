@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}User Activity - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">User Activity</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">User Activity</h1>
+            <a href="{% url 'dashboard:index' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            {% for days_val, label in days_options %}
+            <a href="?days={{ days_val }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if current_days == days_val %}bg-amber-500 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active Users</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ active_users|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">New Users</p>
+                    <p class="text-2xl font-bold text-green-600">{{ new_users|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-plus text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Logins</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ activity_stats.total_logins|default:0|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-sign-in-alt text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Actions Logged</p>
+                    <p class="text-2xl font-bold text-amber-600">{{ activity_stats.total_actions|default:0|intcomma }}</p>
+                </div>
+                <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-history text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Users by Role -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Users by Role</h2>
+            </div>
+            <div class="p-6">
+                <canvas id="roleChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Activity Over Time -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Activity Trend</h2>
+            </div>
+            <div class="p-6">
+                <canvas id="activityChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users by Role Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Role Distribution</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for role in users_by_role %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if role.role == 'Super Admin' or role.role == 'Admin' %}
+                                <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-user-shield text-red-600 text-sm"></i>
+                                </span>
+                                {% elif role.role == 'Manager' %}
+                                <span class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-user-tie text-purple-600 text-sm"></i>
+                                </span>
+                                {% elif role.role == 'Call Center' or role.role == 'Call Center Agent' %}
+                                <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-headset text-blue-600 text-sm"></i>
+                                </span>
+                                {% elif role.role == 'Stock Keeper' or role.role == 'Warehouse' %}
+                                <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-warehouse text-green-600 text-sm"></i>
+                                </span>
+                                {% elif role.role == 'Driver' %}
+                                <span class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-truck text-amber-600 text-sm"></i>
+                                </span>
+                                {% elif role.role == 'Finance' %}
+                                <span class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-calculator text-indigo-600 text-sm"></i>
+                                </span>
+                                {% else %}
+                                <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-gray-600 text-sm"></i>
+                                </span>
+                                {% endif %}
+                                <span class="text-sm font-medium text-gray-900">{{ role.role }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            {{ role.count|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ role.active|default:0|intcomma }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-1 h-2 bg-gray-200 rounded-full mr-3 max-w-[100px]">
+                                    {% widthratio role.count active_users 100 as pct %}
+                                    <div class="h-2 bg-amber-500 rounded-full" style="width: {{ pct }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500">{% widthratio role.count active_users 100 %}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <p class="text-sm">No role data available.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Most Active Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Most Active Users</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user in most_active_users %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <span class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                    {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}" class="h-10 w-10 rounded-full object-cover">
+                                    {% else %}
+                                    <i class="fas fa-user text-gray-500"></i>
+                                    {% endif %}
+                                </span>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ user.get_full_name|default:user.username }}</p>
+                                    <p class="text-xs text-gray-500">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if user.is_superuser %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Super Admin</span>
+                            {% elif user.userrole_set.exists %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ user.userrole_set.first.role.display_name }}</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">User</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ user.action_count|default:0|intcomma }} actions
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if user.last_login %}
+                            {{ user.last_login|timesince }} ago
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'dashboard:user_activity_detail' user.id %}" class="text-amber-600 hover:text-amber-900">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <i class="fas fa-users text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg font-medium">No active users found</p>
+                                <p class="text-sm">There is no user activity for the selected period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Role Chart
+    const roleCtx = document.getElementById('roleChart').getContext('2d');
+    const roleData = {{ users_by_role|safe }};
+
+    const roleColors = [
+        '#EF4444', '#F97316', '#FBBF24', '#84CC16',
+        '#10B981', '#14B8A6', '#3B82F6', '#6366F1',
+        '#8B5CF6', '#EC4899'
+    ];
+
+    new Chart(roleCtx, {
+        type: 'doughnut',
+        data: {
+            labels: roleData.map(r => r.role),
+            datasets: [{
+                data: roleData.map(r => r.count),
+                backgroundColor: roleColors.slice(0, roleData.length),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityData = {{ activity_stats.daily_activity|default:"[]"|safe }};
+
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: activityData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Actions',
+                data: activityData.map(d => d.count || 0),
+                backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

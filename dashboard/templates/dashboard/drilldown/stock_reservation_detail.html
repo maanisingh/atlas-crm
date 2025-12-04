@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Reservation: {{ reservation.order.order_code }} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-2">
+            <a href="{% url 'dashboard:index' %}" class="hover:text-amber-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <a href="{% url 'dashboard:stock_reservations' %}" class="hover:text-amber-600">Stock Reservations</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">Reservation #{{ reservation.id }}</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Stock Reservation Details</h1>
+            <a href="{% url 'dashboard:stock_reservations' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Reservations
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Reservation Details -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Reservation Information</h2>
+                    {% if reservation.status == 'pending' %}
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock mr-1"></i>Pending
+                    </span>
+                    {% elif reservation.status == 'confirmed' %}
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <i class="fas fa-check mr-1"></i>Confirmed
+                    </span>
+                    {% elif reservation.status == 'fulfilled' %}
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-double mr-1"></i>Fulfilled
+                    </span>
+                    {% elif reservation.status == 'cancelled' %}
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                        <i class="fas fa-times mr-1"></i>Cancelled
+                    </span>
+                    {% elif reservation.status == 'expired' %}
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">
+                        <i class="fas fa-hourglass-end mr-1"></i>Expired
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Order Information -->
+                        <div class="col-span-2">
+                            <h3 class="text-sm font-medium text-gray-500 mb-3 pb-2 border-b">Order Information</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Order Code</label>
+                                    <p class="text-gray-900 font-medium">{{ reservation.order.order_code }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Order Date</label>
+                                    <p class="text-gray-900">{{ reservation.order.created_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Information -->
+                        <div class="col-span-2">
+                            <h3 class="text-sm font-medium text-gray-500 mb-3 pb-2 border-b">Product Information</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Product Name</label>
+                                    {% if reservation.product %}
+                                    <p class="text-gray-900 font-medium">{{ reservation.product.name_en }}</p>
+                                    {% else %}
+                                    <p class="text-gray-400">N/A</p>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">SKU</label>
+                                    {% if reservation.product %}
+                                    <p class="text-gray-900">{{ reservation.product.sku|default:'-' }}</p>
+                                    {% else %}
+                                    <p class="text-gray-400">-</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warehouse Information -->
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Warehouse</label>
+                            {% if reservation.warehouse %}
+                            <p class="text-gray-900 font-medium">{{ reservation.warehouse.name }}</p>
+                            <p class="text-xs text-gray-500">{{ reservation.warehouse.location|default:'' }}</p>
+                            {% else %}
+                            <p class="text-gray-400">Not specified</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quantity -->
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Reserved Quantity</label>
+                            <p class="text-2xl font-bold text-amber-600">{{ reservation.quantity|intcomma }}</p>
+                        </div>
+
+                        <!-- Reserved By -->
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Reserved By</label>
+                            {% if reservation.reserved_by %}
+                            <div class="flex items-center">
+                                <span class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                    <i class="fas fa-user text-gray-500 text-sm"></i>
+                                </span>
+                                <span class="text-gray-900">{{ reservation.reserved_by.get_full_name|default:reservation.reserved_by.username }}</span>
+                            </div>
+                            {% else %}
+                            <p class="text-gray-400">System</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Priority -->
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Priority</label>
+                            {% if reservation.priority == 'high' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">High</span>
+                            {% elif reservation.priority == 'medium' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Medium</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Normal</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    {% if reservation.notes %}
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <label class="block text-sm font-medium text-gray-500 mb-2">Notes</label>
+                        <p class="text-gray-700 bg-gray-50 rounded-lg p-4">{{ reservation.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cancellation Reason -->
+                    {% if reservation.status == 'cancelled' and reservation.cancellation_reason %}
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <label class="block text-sm font-medium text-gray-500 mb-2">Cancellation Reason</label>
+                        <p class="text-red-700 bg-red-50 rounded-lg p-4">{{ reservation.cancellation_reason }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Timeline -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Timeline</h3>
+                </div>
+                <div class="p-6">
+                    <div class="flow-root">
+                        <ul role="list" class="-mb-8">
+                            <!-- Created -->
+                            <li>
+                                <div class="relative pb-8">
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-plus text-blue-600 text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900">Created</p>
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ reservation.created_at|date:"M d, H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <!-- Confirmed -->
+                            {% if reservation.confirmed_at %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if reservation.fulfilled_at or reservation.cancelled_at %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-check text-blue-600 text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900">Confirmed</p>
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ reservation.confirmed_at|date:"M d, H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+
+                            <!-- Fulfilled -->
+                            {% if reservation.fulfilled_at %}
+                            <li>
+                                <div class="relative">
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-check-double text-green-600 text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900">Fulfilled</p>
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ reservation.fulfilled_at|date:"M d, H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+
+                            <!-- Cancelled -->
+                            {% if reservation.cancelled_at %}
+                            <li>
+                                <div class="relative">
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-times text-red-600 text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900">Cancelled</p>
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ reservation.cancelled_at|date:"M d, H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+
+                            <!-- Expires -->
+                            {% if reservation.expires_at and reservation.status not in 'fulfilled,cancelled,expired' %}
+                            <li>
+                                <div class="relative">
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-hourglass-half text-gray-400 text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-500">Expires</p>
+                                            </div>
+                                            <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                                                {{ reservation.expires_at|date:"M d, H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Alerts -->
+            {% if related_alerts %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Related Alerts</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    {% for alert in related_alerts %}
+                    <a href="{% url 'dashboard:inventory_alert_detail' alert.id %}" class="flex items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        {% if alert.priority == 'critical' %}
+                        <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation text-red-600 text-sm"></i>
+                        </span>
+                        {% else %}
+                        <span class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-triangle text-amber-600 text-sm"></i>
+                        </span>
+                        {% endif %}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ alert.title }}</p>
+                            <p class="text-xs text-gray-500">{{ alert.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            {% if reservation.status in 'pending,confirmed' %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    <a href="#" class="flex items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-shopping-cart text-blue-600 text-sm"></i>
+                        </span>
+                        <span class="text-sm font-medium text-gray-900">View Order</span>
+                    </a>
+                    {% if reservation.product %}
+                    <a href="#" class="flex items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-box text-purple-600 text-sm"></i>
+                        </span>
+                        <span class="text-sm font-medium text-gray-900">View Product</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

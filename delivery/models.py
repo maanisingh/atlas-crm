@@ -109,7 +109,7 @@ class DeliveryRecord(models.Model):
         ('urgent', 'Urgent'),
     )
     
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Using default BigAutoField to maintain migration compatibility
     order = models.OneToOneField('orders.Order', on_delete=models.CASCADE, related_name='delivery')
     delivery_company = models.ForeignKey(DeliveryCompany, on_delete=models.CASCADE, related_name='deliveries')
     courier = models.ForeignKey(Courier, on_delete=models.SET_NULL, null=True, blank=True, related_name='deliveries')
@@ -441,3 +441,14 @@ class OrderAssignment(models.Model):
     
     def __str__(self):
         return f"Order {self.order.id} assigned to {self.delivery_agent.get_full_name() or self.delivery_agent.email}"
+
+
+# Import Security Models
+from .security_models import (
+    DeliveryOTP,
+    DeliveryPIN,
+    GeofenceZone,
+    DeliverySecurityEvent,
+    FraudDetection,
+    DeliverySecuritySettings
+)

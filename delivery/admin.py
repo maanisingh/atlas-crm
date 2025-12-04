@@ -8,6 +8,16 @@ from .models import (
     DeliveryRoute, DeliveryPerformance
 )
 
+# Import security admin configurations
+from .security_admin import (
+    DeliveryOTPAdmin,
+    DeliveryPINAdmin,
+    GeofenceZoneAdmin,
+    DeliverySecurityEventAdmin,
+    FraudDetectionAdmin,
+    DeliverySecuritySettingsAdmin
+)
+
 @admin.register(DeliveryCompany)
 class DeliveryCompanyAdmin(admin.ModelAdmin):
     list_display = ['name_en', 'name_ar', 'base_cost', 'is_active', 'created_at']

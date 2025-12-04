@@ -1,0 +1,576 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Returns Management Dashboard" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Returns Management Dashboard" %}</h1>
+        <p class="text-gray-600">{% trans "Manage and process all return requests" %}</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <!-- Total Returns -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Total Returns" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.total_returns }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approval -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Pending Approval" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.pending_approval }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "In Progress" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.in_progress }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed This Month -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Completed This Month" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.completed_this_month }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Refunded -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Total Refunded" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">AED {{ stats.total_refunded|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">{% trans "Quick Actions" %}</h2>
+        <div class="flex flex-wrap gap-3">
+            <a href="?status=pending_approval" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 font-medium inline-flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {% trans "Review Pending Returns" %}
+            </a>
+            <a href="?status=received" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium inline-flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                {% trans "Inspect Received Returns" %}
+            </a>
+            <a href="?status=approved_for_refund" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium inline-flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {% trans "Process Refunds" %}
+            </a>
+            <a href="?priority=high" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium inline-flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                {% trans "High Priority Returns" %}
+            </a>
+            <button onclick="exportReturns()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium inline-flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                {% trans "Export Report" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="get" class="space-y-4" id="filterForm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">{% trans "Filter Returns" %}</h2>
+                <button type="button" onclick="toggleFilters()" class="text-sm text-blue-600 hover:text-blue-800">
+                    {% trans "Toggle Advanced Filters" %}
+                </button>
+            </div>
+
+            <!-- Basic Filters (Always Visible) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Search" %}</label>
+                    {{ filter_form.search }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Date From" %}</label>
+                    {{ filter_form.date_from }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Date To" %}</label>
+                    {{ filter_form.date_to }}
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+                        {% trans "Apply Filters" %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters (Collapsible) -->
+            <div id="advancedFilters" class="hidden space-y-4 pt-4 border-t border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Return Status" %}</label>
+                        <div class="space-y-2">
+                            {{ filter_form.return_status }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Refund Status" %}</label>
+                        <div class="space-y-2">
+                            {{ filter_form.refund_status }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Return Reason" %}</label>
+                        <div class="space-y-2">
+                            {{ filter_form.return_reason }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-2 pt-4">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+                    {% trans "Apply Filters" %}
+                </button>
+                <a href="{% url 'orders:admin_returns_dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
+                    {% trans "Clear All Filters" %}
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    {% if returns %}
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="post" action="{% url 'orders:bulk_return_action' %}" id="bulkActionForm">
+            {% csrf_token %}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-gray-700">{% trans "Select All" %}</span>
+                    </label>
+                    <span id="selectedCount" class="text-sm text-gray-600">0 {% trans "selected" %}</span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <select name="bulk_action" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                        <option value="">{% trans "Select Action" %}</option>
+                        <option value="approve">{% trans "Approve Selected" %}</option>
+                        <option value="reject">{% trans "Reject Selected" %}</option>
+                        <option value="mark_received">{% trans "Mark as Received" %}</option>
+                        <option value="assign_inspector">{% trans "Assign to Inspector" %}</option>
+                        <option value="export">{% trans "Export Selected" %}</option>
+                    </select>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium" onclick="return confirmBulkAction()">
+                        {% trans "Apply" %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Returns Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        {% if returns %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left">
+                                <input type="checkbox" id="tableSelectAll" class="rounded border-gray-300 text-blue-600 shadow-sm">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=return_code" class="hover:text-gray-700">
+                                    {% trans "Return Code" %}
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Customer" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Order" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Reason" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Status" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Refund Status" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Priority" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=refund_amount" class="hover:text-gray-700">
+                                    {% trans "Refund Amount" %}
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=created_at" class="hover:text-gray-700">
+                                    {% trans "Date" %}
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Age" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Actions" %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for return in returns %}
+                        <tr class="hover:bg-gray-50 {% if return.requires_manager_approval %}bg-red-50{% endif %}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="selected_returns" value="{{ return.id }}" class="return-checkbox rounded border-gray-300 text-blue-600 shadow-sm">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'orders:admin_return_detail' return_code=return.return_code %}" class="text-sm font-medium text-blue-600 hover:text-blue-900">
+                                    {{ return.return_code }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ return.customer.get_full_name }}</div>
+                                <div class="text-xs text-gray-500">{{ return.customer.email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'orders:order_detail' order_id=return.order.id %}" class="text-sm text-blue-600 hover:text-blue-900">
+                                    {{ return.order.order_code }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm text-gray-900">{{ return.get_return_reason_display }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if return.return_status == 'requested' or return.return_status == 'pending_approval' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% elif return.return_status == 'approved' or return.return_status == 'pickup_scheduled' or return.return_status == 'in_transit' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% elif return.return_status == 'received' or return.return_status == 'inspecting' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% elif return.return_status == 'completed' or return.return_status == 'refund_completed' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% elif return.return_status == 'rejected' or return.return_status == 'cancelled' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        {{ return.get_return_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if return.refund_status == 'completed' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        {{ return.get_refund_status_display }}
+                                    </span>
+                                {% elif return.refund_status == 'processing' or return.refund_status == 'approved' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ return.get_refund_status_display }}
+                                    </span>
+                                {% elif return.refund_status == 'failed' or return.refund_status == 'cancelled' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        {{ return.get_refund_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        {{ return.get_refund_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if return.priority == 'high' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        {% trans "High" %}
+                                    </span>
+                                {% elif return.priority == 'medium' %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        {% trans "Medium" %}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        {% trans "Normal" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-gray-900">AED {{ return.refund_amount|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900">{{ return.created_at|date:"M d, Y" }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if return.days_since_request > 7 %}
+                                    <span class="text-sm font-medium text-red-600">{{ return.days_since_request }} {% trans "days" %}</span>
+                                {% elif return.days_since_request > 3 %}
+                                    <span class="text-sm font-medium text-yellow-600">{{ return.days_since_request }} {% trans "days" %}</span>
+                                {% else %}
+                                    <span class="text-sm text-gray-900">{{ return.days_since_request }} {% trans "days" %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'orders:admin_return_detail' return_code=return.return_code %}" class="text-blue-600 hover:text-blue-900" title="{% trans 'View Details' %}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </a>
+                                    {% if return.return_status == 'pending_approval' %}
+                                    <a href="{% url 'orders:approve_return' return_code=return.return_code %}" class="text-green-600 hover:text-green-900" title="{% trans 'Approve/Reject' %}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </a>
+                                    {% endif %}
+                                    {% if return.return_status == 'received' %}
+                                    <a href="{% url 'orders:inspect_return' return_code=return.return_code %}" class="text-purple-600 hover:text-purple-900" title="{% trans 'Inspect' %}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                        </svg>
+                                    </a>
+                                    {% endif %}
+                                    {% if return.refund_status == 'approved' %}
+                                    <a href="{% url 'orders:process_refund' return_code=return.return_code %}" class="text-orange-600 hover:text-orange-900" title="{% trans 'Process Refund' %}">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        {% trans "Previous" %}
+                    </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        {% trans "Next" %}
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            {% trans "Showing" %}
+                            <span class="font-medium">{{ page_obj.start_index }}</span>
+                            {% trans "to" %}
+                            <span class="font-medium">{{ page_obj.end_index }}</span>
+                            {% trans "of" %}
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                            {% trans "results" %}
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if page_obj.has_previous %}
+                            <a href="?page=1" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "First" %}</span>
+                                &laquo;&laquo;
+                            </a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "Previous" %}</span>
+                                &laquo;
+                            </a>
+                            {% endif %}
+
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                            </span>
+
+                            {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "Next" %}</span>
+                                &raquo;
+                            </a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "Last" %}</span>
+                                &raquo;&raquo;
+                            </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">{% trans "No returns found" %}</h3>
+                <p class="mt-1 text-sm text-gray-500">{% trans "There are no return requests matching your current filters." %}</p>
+                <div class="mt-6">
+                    <a href="{% url 'orders:admin_returns_dashboard' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        {% trans "Clear Filters" %}
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle advanced filters
+    window.toggleFilters = function() {
+        const advancedFilters = document.getElementById('advancedFilters');
+        advancedFilters.classList.toggle('hidden');
+    };
+
+    // Select all checkboxes
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const tableSelectAllCheckbox = document.getElementById('tableSelectAll');
+    const returnCheckboxes = document.querySelectorAll('.return-checkbox');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('.return-checkbox:checked').length;
+        if (selectedCountSpan) {
+            selectedCountSpan.textContent = checked + ' {% trans "selected" %}';
+        }
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            returnCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            if (tableSelectAllCheckbox) {
+                tableSelectAllCheckbox.checked = this.checked;
+            }
+            updateSelectedCount();
+        });
+    }
+
+    if (tableSelectAllCheckbox) {
+        tableSelectAllCheckbox.addEventListener('change', function() {
+            returnCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = this.checked;
+            }
+            updateSelectedCount();
+        });
+    }
+
+    returnCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectedCount();
+
+            // Update select all checkboxes
+            const allChecked = Array.from(returnCheckboxes).every(cb => cb.checked);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+            }
+            if (tableSelectAllCheckbox) {
+                tableSelectAllCheckbox.checked = allChecked;
+            }
+        });
+    });
+
+    // Bulk action confirmation
+    window.confirmBulkAction = function() {
+        const checked = document.querySelectorAll('.return-checkbox:checked').length;
+        if (checked === 0) {
+            alert('{% trans "Please select at least one return to perform bulk action." %}');
+            return false;
+        }
+
+        const action = document.querySelector('select[name="bulk_action"]').value;
+        if (!action) {
+            alert('{% trans "Please select an action to perform." %}');
+            return false;
+        }
+
+        return confirm('{% trans "Are you sure you want to perform this action on " %}' + checked + '{% trans " selected returns?" %}');
+    };
+
+    // Export returns
+    window.exportReturns = function() {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('export', 'csv');
+        window.location.href = currentUrl.toString();
+    };
+});
+</script>
+{% endblock %}

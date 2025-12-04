@@ -1,0 +1,15 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Inspect Return" %}</title>
+</head>
+<body>
+    <h1>{% trans "Inspect Returned Items" %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Complete Inspection" %}</button>
+    </form>
+</body>
+</html>
