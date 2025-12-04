@@ -1,23 +1,308 @@
+{% extends 'base.html' %}
 {% load i18n %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{% trans "Returns Dashboard" %}</title>
-</head>
-<body>
-    <h1>{% trans "Returns Management Dashboard" %}</h1>
-    <div class="stats">
-        <p>Total Returns: {{ stats.total_returns }}</p>
-        <p>Pending: {{ stats.pending }}</p>
-        <p>Approved: {{ stats.approved }}</p>
+{% load role_filters %}
+
+{% block title %}{% trans "Returns Management Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-orange-600">{% trans "Returns Management Dashboard" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Manage return requests, approvals, and refund processing" %}</p>
+        </div>
     </div>
-    <div class="returns-list">
-        {% for return in returns %}
-            <div class="return-item">
-                <span class="return-code">{{ return.return_code }}</span>
-                <span class="status">{{ return.return_status }}</span>
+
+    <!-- Statistics Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+        <!-- Total Returns -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "Total Returns" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.total_returns }}</p>
+                </div>
+                <i class="fas fa-undo text-blue-600 text-2xl"></i>
             </div>
-        {% endfor %}
+        </div>
+
+        <!-- Requested -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "Requested" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.requested }}</p>
+                </div>
+                <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- Pending Approval -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-orange-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "Pending Approval" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.pending_approval }}</p>
+                </div>
+                <i class="fas fa-user-check text-orange-600 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- Approved -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "Approved" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.approved }}</p>
+                </div>
+                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- In Transit -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "In Transit" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.in_transit }}</p>
+                </div>
+                <i class="fas fa-truck text-purple-600 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- Completed -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-teal-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase">{% trans "Completed" %}</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.completed }}</p>
+                </div>
+                <i class="fas fa-flag-checkered text-teal-600 text-2xl"></i>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+
+    <!-- Refund Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+            <p class="text-sm font-medium opacity-90">{% trans "Refund Pending" %}</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.refund_pending }}</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-md p-6 text-white">
+            <p class="text-sm font-medium opacity-90">{% trans "Refund Approved" %}</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.refund_approved }}</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
+            <p class="text-sm font-medium opacity-90">{% trans "Refund Completed" %}</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.refund_completed }}</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+            <p class="text-sm font-medium opacity-90">{% trans "Total Refunded" %}</p>
+            <p class="text-3xl font-bold mt-2">AED {{ stats.total_refund_amount|floatformat:2 }}</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-filter mr-2 text-orange-600"></i>
+            {% trans "Filter Returns" %}
+        </h2>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {{ filter_form.as_p }}
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    {% trans "Search" %}
+                </button>
+                <a href="{% url 'orders:returns_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    {% trans "Clear" %}
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Returns List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-list mr-2 text-orange-600"></i>
+                {% trans "Return Requests" %}
+            </h2>
+        </div>
+
+        {% if returns %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Return Code" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Order" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Customer" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Reason" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Status" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Refund Status" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Amount" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Date" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Actions" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for return in returns %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'orders:return_detail_admin' return.return_code %}" class="text-orange-600 hover:text-orange-800 font-medium">
+                                {{ return.return_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'orders:detail' return.order.id %}" class="text-blue-600 hover:text-blue-800">
+                                {{ return.order.order_code }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if return.customer %}
+                                <div class="text-sm text-gray-900">{{ return.customer.get_full_name }}</div>
+                                <div class="text-xs text-gray-500">{{ return.customer.email }}</div>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ return.get_return_reason_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if return.return_status == 'requested' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    {{ return.get_return_status_display }}
+                                </span>
+                            {% elif return.return_status == 'approved' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ return.get_return_status_display }}
+                                </span>
+                            {% elif return.return_status == 'rejected' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    {{ return.get_return_status_display }}
+                                </span>
+                            {% elif return.return_status == 'completed' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-teal-100 text-teal-800">
+                                    {{ return.get_return_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    {{ return.get_return_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if return.refund_status == 'completed' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    {{ return.get_refund_status_display }}
+                                </span>
+                            {% elif return.refund_status == 'pending' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ return.get_refund_status_display }}
+                                </span>
+                            {% elif return.refund_status == 'approved' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    <i class="fas fa-thumbs-up mr-1"></i>
+                                    {{ return.get_refund_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ return.get_refund_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            AED {{ return.refund_amount|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ return.created_at|date:"Y-m-d H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <a href="{% url 'orders:return_detail_admin' return.return_code %}" class="text-blue-600 hover:text-blue-900" title="{% trans 'View Details' %}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if return.return_status == 'requested' or return.return_status == 'pending_approval' %}
+                            <a href="{% url 'orders:approve_return' return.return_code %}" class="text-green-600 hover:text-green-900" title="{% trans 'Approve/Reject' %}">
+                                <i class="fas fa-user-check"></i>
+                            </a>
+                            {% endif %}
+                            {% if return.return_status == 'received' or return.return_status == 'inspecting' %}
+                            <a href="{% url 'orders:inspect_return' return.return_code %}" class="text-purple-600 hover:text-purple-900" title="{% trans 'Inspect' %}">
+                                <i class="fas fa-search"></i>
+                            </a>
+                            {% endif %}
+                            {% if return.refund_status == 'approved' %}
+                            <a href="{% url 'orders:process_refund' return.return_code %}" class="text-orange-600 hover:text-orange-900" title="{% trans 'Process Refund' %}">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-6 py-12 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <i class="fas fa-undo text-3xl text-gray-400"></i>
+            </div>
+            <p class="text-lg font-medium text-gray-900 mb-2">{% trans "No Return Requests" %}</p>
+            <p class="text-sm text-gray-500">{% trans "There are no return requests matching your criteria." %}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Priority Alerts -->
+    {% if stats.requires_manager_approval > 0 or stats.high_priority > 0 %}
+    <div class="mt-6 bg-orange-50 border-l-4 border-orange-600 p-4 rounded-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-orange-800">{% trans "Priority Alerts" %}</h3>
+                <div class="mt-2 text-sm text-orange-700">
+                    <ul class="list-disc pl-5 space-y-1">
+                        {% if stats.requires_manager_approval > 0 %}
+                        <li>{{ stats.requires_manager_approval }} {% trans "return(s) require manager approval" %}</li>
+                        {% endif %}
+                        {% if stats.high_priority > 0 %}
+                        <li>{{ stats.high_priority }} {% trans "high-priority return(s)" %}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
