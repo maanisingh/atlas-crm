@@ -287,7 +287,13 @@ class User(AbstractUser, PermissionsMixin):
     def get_all_roles(self):
         """Get all active roles for the user"""
         return [user_role.role for user_role in self.user_roles.filter(is_active=True)]
-    
+
+    def get_roles(self):
+        """Get all active roles for the user (returns QuerySet for compatibility)"""
+        from roles.models import Role
+        role_ids = self.user_roles.filter(is_active=True).values_list('role_id', flat=True)
+        return Role.objects.filter(id__in=role_ids)
+
     def has_role(self, role_name):
         """Check if user has the specified role"""
         return self.user_roles.filter(role__name=role_name, is_active=True).exists()
