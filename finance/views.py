@@ -2335,10 +2335,12 @@ def cod_management(request):
     pending_cod = cod_payments.filter(payment_status='pending').aggregate(total=Sum('amount'))['total'] or 0
     collected_cod = cod_payments.filter(payment_status='completed').aggregate(total=Sum('amount'))['total'] or 0
 
-    # COD by delivery agent (from orders)
-    cod_by_agent = cod_payments.values(
-        'order__delivery_agent__first_name',
-        'order__delivery_agent__last_name'
+    # COD by delivery courier (via order's delivery record)
+    cod_by_agent = cod_payments.filter(
+        order__delivery__courier__isnull=False
+    ).values(
+        'order__delivery__courier__user__first_name',
+        'order__delivery__courier__user__last_name'
     ).annotate(
         total=Sum('amount'),
         count=Count('id')

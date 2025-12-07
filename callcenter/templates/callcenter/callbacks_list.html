@@ -129,20 +129,20 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">
-                                {{ callback.followup_date|date:"M d, Y H:i"|default:"Not set" }}
+                                {{ callback.call_back_time|date:"M d, Y H:i"|default:"Not set" }}
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">
-                                {{ callback.call_center_agent.get_full_name|default:"Unassigned" }}
+                                {{ callback.agent.get_full_name|default:"Unassigned" }}
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            {% if callback.followup_completed %}
+                            {% if callback.status != 'call_back_later' %}
                                 <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                                     Completed
                                 </span>
-                            {% elif callback.followup_date and callback.followup_date < now %}
+                            {% elif callback.call_back_time and callback.call_back_time < now %}
                                 <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                                     Overdue
                                 </span>
@@ -153,7 +153,7 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
-                            {% if not callback.followup_completed %}
+                            {% if callback.status == 'call_back_later' %}
                                 <a href="{% url 'callcenter:complete_callback' callback.id %}"
                                    class="text-green-600 hover:text-green-800 mr-3">
                                     <i class="fas fa-check"></i> Complete

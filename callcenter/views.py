@@ -3641,48 +3641,53 @@ def callbacks_list(request):
     """List all scheduled callbacks"""
     from orders.models import Order
 
-    # Get callbacks (orders marked for follow-up)
+    # Get callbacks (orders with call_back_time set)
     callbacks = Order.objects.filter(
-        needs_followup=True
-    ).select_related('customer', 'call_center_agent').order_by('followup_date')
+        call_back_time__isnull=False
+    ).select_related('customer', 'agent').order_by('call_back_time')
 
     # Filter by status
     status = request.GET.get('status', '')
+    now = timezone.now()
     if status == 'pending':
-        callbacks = callbacks.filter(followup_completed=False)
+        callbacks = callbacks.filter(call_back_time__gte=now, status='call_back_later')
     elif status == 'completed':
-        callbacks = callbacks.filter(followup_completed=True)
+        callbacks = callbacks.exclude(status='call_back_later')
     elif status == 'overdue':
         callbacks = callbacks.filter(
-            followup_completed=False,
-            followup_date__lt=timezone.now()
+            call_back_time__lt=now,
+            status='call_back_later'
         )
 
     # Filter by agent (for managers)
     agent_id = request.GET.get('agent', '')
     if agent_id:
-        callbacks = callbacks.filter(call_center_agent_id=agent_id)
+        callbacks = callbacks.filter(agent_id=agent_id)
 
     # For agents, show only their callbacks
-    if hasattr(request.user, 'role') and request.user.role == 'call_center_agent':
-        callbacks = callbacks.filter(call_center_agent=request.user)
+    if request.user.has_role('Call Center Agent'):
+        callbacks = callbacks.filter(agent=request.user)
 
     # Statistics
+    all_callbacks = Order.objects.filter(call_back_time__isnull=False)
     stats = {
-        'total': callbacks.count(),
-        'pending': callbacks.filter(followup_completed=False).count(),
-        'completed_today': callbacks.filter(
-            followup_completed=True,
-            updated_at__date=timezone.now().date()
-        ).count(),
-        'overdue': callbacks.filter(
-            followup_completed=False,
-            followup_date__lt=timezone.now()
+        'total': all_callbacks.count(),
+        'pending': all_callbacks.filter(call_back_time__gte=now, status='call_back_later').count(),
+        'completed_today': all_callbacks.filter(
+            updated_at__date=now.date()
+        ).exclude(status='call_back_later').count(),
+        'overdue': all_callbacks.filter(
+            call_back_time__lt=now,
+            status='call_back_later'
         ).count(),
     }
 
-    # Get agents for filter dropdown
-    agents = User.objects.filter(role='call_center_agent', is_active=True)
+    # Get agents for filter dropdown (users with Call Center Agent role)
+    from roles.models import UserRole
+    agent_user_ids = UserRole.objects.filter(
+        role__name='Call Center Agent'
+    ).values_list('user_id', flat=True)
+    agents = User.objects.filter(id__in=agent_user_ids, is_active=True)
 
     # Pagination
     paginator = Paginator(callbacks, 20)
@@ -3778,8 +3783,15 @@ def complete_callback(request, callback_id):
 @login_required
 def agents_list(request):
     """List all call center agents"""
+    from roles.models import UserRole
+
+    # Get users with Call Center Agent role
+    agent_user_ids = UserRole.objects.filter(
+        role__name='Call Center Agent'
+    ).values_list('user_id', flat=True)
+
     agents = User.objects.filter(
-        role='call_center_agent'
+        id__in=agent_user_ids
     ).annotate(
         total_orders=Count('assigned_orders'),
         completed_orders=Count('assigned_orders', filter=Q(assigned_orders__status='delivered')),
@@ -3812,7 +3824,7 @@ def agent_performance(request, agent_id):
     """View agent performance metrics"""
     from orders.models import Order
 
-    agent = get_object_or_404(User, id=agent_id, role='call_center_agent')
+    agent = get_object_or_404(User, id=agent_id)
 
     # Date range
     days = int(request.GET.get('days', 30))
@@ -3820,7 +3832,7 @@ def agent_performance(request, agent_id):
 
     # Get orders handled by this agent
     orders = Order.objects.filter(
-        call_center_agent=agent,
+        agent=agent,
         created_at__gte=start_date
     )
 
@@ -3864,7 +3876,7 @@ def agent_performance(request, agent_id):
 @login_required
 def agent_schedule(request, agent_id):
     """View and manage agent schedule"""
-    agent = get_object_or_404(User, id=agent_id, role='call_center_agent')
+    agent = get_object_or_404(User, id=agent_id)
 
     if request.method == 'POST':
         # Update schedule
