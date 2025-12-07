@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agent Schedule - {{ agent.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <a href="{% url 'callcenter:agents' %}" class="mr-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-calendar-alt text-orange-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-orange-600">{{ agent.get_full_name }}</h1>
+                    <p class="mt-1 text-sm text-gray-500">Weekly work schedule</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-4">
+                    <!-- Monday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Monday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="monday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.monday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.monday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.monday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.monday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.monday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tuesday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Tuesday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="tuesday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.tuesday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.tuesday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.tuesday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.tuesday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.tuesday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Wednesday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Wednesday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="wednesday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.wednesday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.wednesday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.wednesday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.wednesday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.wednesday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Thursday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Thursday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="thursday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.thursday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.thursday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.thursday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.thursday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.thursday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Friday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Friday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="friday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.friday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.friday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.friday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.friday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.friday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Saturday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Saturday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="saturday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.saturday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.saturday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.saturday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.saturday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.saturday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sunday -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-24 font-medium text-gray-700">Sunday</span>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <select name="sunday" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="" {% if not schedule.sunday %}selected{% endif %}>Off</option>
+                                <option value="09:00-17:00" {% if schedule.sunday == '09:00-17:00' %}selected{% endif %}>9 AM - 5 PM</option>
+                                <option value="10:00-18:00" {% if schedule.sunday == '10:00-18:00' %}selected{% endif %}>10 AM - 6 PM</option>
+                                <option value="12:00-20:00" {% if schedule.sunday == '12:00-20:00' %}selected{% endif %}>12 PM - 8 PM</option>
+                                <option value="14:00-22:00" {% if schedule.sunday == '14:00-22:00' %}selected{% endif %}>2 PM - 10 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <a href="{% url 'callcenter:agents' %}"
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700">
+                        <i class="fas fa-save mr-2"></i>Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Role - {{ role.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <a href="{% url 'users:roles' %}" class="mr-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-edit text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-purple-600">Edit Role</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ role.name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <!-- Role Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Role Name</label>
+                        <input type="text" name="name" required value="{{ role.name }}"
+                               class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea name="description" rows="3"
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2">{{ role.description|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_active" id="is_active" {% if role.is_active %}checked{% endif %}
+                               class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                        <label for="is_active" class="ml-2 block text-sm text-gray-700">Active</label>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <a href="{% url 'users:role_permissions' role.id %}"
+                       class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                        <i class="fas fa-key mr-2"></i>Manage Permissions
+                    </a>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'users:roles' %}"
+                           class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </a>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                            <i class="fas fa-save mr-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Role Information -->
+        <div class="mt-6 bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Role Information</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-500">Created</p>
+                    <p class="font-medium">{{ role.created_at|date:"M d, Y H:i"|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Last Updated</p>
+                    <p class="font-medium">{{ role.updated_at|date:"M d, Y H:i"|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Users with this Role</p>
+                    <p class="font-medium">{{ role.users.count|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Permissions</p>
+                    <p class="font-medium">{{ role.permissions.count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

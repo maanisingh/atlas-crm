@@ -47,4 +47,14 @@ urlpatterns = [
     path('bulk/update-status/', views.bulk_update_order_status, name='bulk_update_status'),
     path('bulk/create-followups/', views.bulk_create_followups, name='bulk_create_followups'),
     path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
+
+    # Callbacks Management
+    path('callbacks/', views.callbacks_list, name='callbacks'),
+    path('callbacks/create/', views.create_callback, name='create_callback'),
+    path('callbacks/<int:callback_id>/complete/', views.complete_callback, name='complete_callback'),
+
+    # Agents Management
+    path('agents/', views.agents_list, name='agents'),
+    path('agents/<int:agent_id>/performance/', views.agent_performance, name='agent_performance'),
+    path('agents/<int:agent_id>/schedule/', views.agent_schedule, name='agent_schedule'),
 ]

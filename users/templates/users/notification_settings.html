@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Notification Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-bell text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-blue-600">Notification Settings</h1>
+                    <p class="mt-1 text-sm text-gray-500">Manage how you receive notifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Settings Navigation -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
+            <div class="flex space-x-4">
+                <a href="{% url 'users:settings' %}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md">
+                    <i class="fas fa-cog mr-2"></i>General
+                </a>
+                <a href="{% url 'users:notification_settings' %}" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                    <i class="fas fa-bell mr-2"></i>Notifications
+                </a>
+                <a href="{% url 'users:two_factor' %}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md">
+                    <i class="fas fa-shield-alt mr-2"></i>Security
+                </a>
+            </div>
+        </div>
+
+        <!-- Notification Settings Form -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-6">Notification Preferences</h3>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <!-- Order Notifications -->
+                    <div class="border-b border-gray-200 pb-6">
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Order Notifications</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">New Orders</p>
+                                    <p class="text-xs text-gray-500">Receive alerts when new orders are placed</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_new_orders" class="sr-only peer" {% if settings.notify_new_orders %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Order Status Changes</p>
+                                    <p class="text-xs text-gray-500">Get notified when order status changes</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_order_status" class="sr-only peer" {% if settings.notify_order_status %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Notifications -->
+                    <div class="border-b border-gray-200 pb-6">
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Inventory Notifications</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Low Stock Alerts</p>
+                                    <p class="text-xs text-gray-500">Alert when items fall below minimum stock</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_low_stock" class="sr-only peer" {% if settings.notify_low_stock %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Stock Updates</p>
+                                    <p class="text-xs text-gray-500">Notify when stock is added or updated</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_stock_updates" class="sr-only peer" {% if settings.notify_stock_updates %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Notifications -->
+                    <div class="border-b border-gray-200 pb-6">
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Financial Notifications</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Payment Received</p>
+                                    <p class="text-xs text-gray-500">Notify when payments are received</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_payments" class="sr-only peer" {% if settings.notify_payments %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Payout Updates</p>
+                                    <p class="text-xs text-gray-500">Get notified about payout processing</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="notify_payouts" class="sr-only peer" {% if settings.notify_payouts %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Channels -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Delivery Channels</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Email Notifications</p>
+                                    <p class="text-xs text-gray-500">Receive notifications via email</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_enabled" class="sr-only peer" {% if settings.email_enabled %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">SMS Notifications</p>
+                                    <p class="text-xs text-gray-500">Receive notifications via SMS</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="sms_enabled" class="sr-only peer" {% if settings.sms_enabled %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Push Notifications</p>
+                                    <p class="text-xs text-gray-500">Receive in-app push notifications</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="push_enabled" class="sr-only peer" {% if settings.push_enabled %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        <i class="fas fa-save mr-2"></i>Save Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

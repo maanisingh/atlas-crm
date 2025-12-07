@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Role Permissions - {{ role.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <a href="{% url 'users:edit_role' role.id %}" class="mr-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-key text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-semibold text-purple-600">Role Permissions</h1>
+                        <p class="mt-1 text-sm text-gray-500">Manage permissions for {{ role.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Permissions by Module -->
+            <div class="space-y-6">
+                <!-- Orders Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-shopping-cart text-blue-600 mr-2"></i>Orders
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="orders.view"
+                                   {% if 'orders.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="orders.create"
+                                   {% if 'orders.create' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Create</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="orders.edit"
+                                   {% if 'orders.edit' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Edit</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="orders.delete"
+                                   {% if 'orders.delete' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Delete</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Inventory Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-boxes text-green-600 mr-2"></i>Inventory
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="inventory.view"
+                                   {% if 'inventory.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="inventory.create"
+                                   {% if 'inventory.create' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Create</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="inventory.edit"
+                                   {% if 'inventory.edit' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Edit</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="inventory.delete"
+                                   {% if 'inventory.delete' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Delete</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Finance Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-dollar-sign text-yellow-600 mr-2"></i>Finance
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="finance.view"
+                                   {% if 'finance.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="finance.create"
+                                   {% if 'finance.create' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Create</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="finance.edit"
+                                   {% if 'finance.edit' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Edit</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="finance.approve"
+                                   {% if 'finance.approve' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Approve</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Users Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-users text-purple-600 mr-2"></i>Users
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="users.view"
+                                   {% if 'users.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="users.create"
+                                   {% if 'users.create' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Create</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="users.edit"
+                                   {% if 'users.edit' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Edit</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="users.delete"
+                                   {% if 'users.delete' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Delete</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Delivery Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-truck text-orange-600 mr-2"></i>Delivery
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="delivery.view"
+                                   {% if 'delivery.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="delivery.assign"
+                                   {% if 'delivery.assign' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Assign</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="delivery.update"
+                                   {% if 'delivery.update' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Update Status</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="delivery.manage"
+                                   {% if 'delivery.manage' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Manage</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Reports Module -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        <i class="fas fa-chart-bar text-red-600 mr-2"></i>Reports
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="reports.view"
+                                   {% if 'reports.view' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">View Reports</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="reports.export"
+                                   {% if 'reports.export' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Export</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="permissions" value="reports.analytics"
+                                   {% if 'reports.analytics' in current_permissions %}checked{% endif %}
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Analytics</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-3">
+                <a href="{% url 'users:edit_role' role.id %}"
+                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                    <i class="fas fa-save mr-2"></i>Save Permissions
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

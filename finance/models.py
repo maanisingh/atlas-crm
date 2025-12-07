@@ -365,3 +365,234 @@ class PlatformSyncLog(models.Model):
 
 # Import COD models
 from .cod_models import CODPayment, CODReconciliation
+
+
+class SellerPayout(models.Model):
+    """
+    Seller Payout Model - Tracks payouts to sellers for their orders
+    """
+
+    PAYOUT_STATUS = (
+        ('pending', _('Pending')),
+        ('processing', _('Processing')),
+        ('completed', _('Completed')),
+        ('failed', _('Failed')),
+        ('cancelled', _('Cancelled')),
+    )
+
+    PAYOUT_METHOD = (
+        ('bank_transfer', _('Bank Transfer')),
+        ('cash', _('Cash')),
+        ('cheque', _('Cheque')),
+        ('wallet', _('Wallet')),
+    )
+
+    # Payout Reference
+    payout_reference = models.CharField(_('Payout Reference'), max_length=50, unique=True)
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payouts',
+                               verbose_name=_('Seller'))
+
+    # Amount Details
+    gross_amount = models.DecimalField(_('Gross Amount'), max_digits=10, decimal_places=2)
+    commission_amount = models.DecimalField(_('Commission Amount'), max_digits=10, decimal_places=2, default=0.00)
+    fees_amount = models.DecimalField(_('Fees Amount'), max_digits=10, decimal_places=2, default=0.00)
+    net_amount = models.DecimalField(_('Net Amount'), max_digits=10, decimal_places=2)
+    currency = models.CharField(_('Currency'), max_length=3, default='AED')
+
+    # Period Details
+    period_start = models.DateField(_('Period Start'))
+    period_end = models.DateField(_('Period End'))
+    orders_count = models.PositiveIntegerField(_('Orders Count'), default=0)
+
+    # Payment Details
+    payout_method = models.CharField(_('Payout Method'), max_length=20, choices=PAYOUT_METHOD,
+                                    default='bank_transfer')
+    status = models.CharField(_('Status'), max_length=20, choices=PAYOUT_STATUS, default='pending')
+
+    # Bank Details (optional)
+    bank_name = models.CharField(_('Bank Name'), max_length=100, blank=True)
+    account_number = models.CharField(_('Account Number'), max_length=50, blank=True)
+    iban = models.CharField(_('IBAN'), max_length=50, blank=True)
+
+    # Processing Details
+    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='processed_payouts', verbose_name=_('Processed By'))
+    processed_at = models.DateTimeField(_('Processed At'), null=True, blank=True)
+    transaction_reference = models.CharField(_('Transaction Reference'), max_length=100, blank=True)
+
+    # Notes
+    notes = models.TextField(_('Notes'), blank=True)
+    failure_reason = models.TextField(_('Failure Reason'), blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Seller Payout')
+        verbose_name_plural = _('Seller Payouts')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.payout_reference} - {self.seller.get_full_name()} - {self.net_amount} {self.currency}"
+
+    def save(self, *args, **kwargs):
+        # Generate payout reference if not set
+        if not self.payout_reference:
+            import uuid
+            self.payout_reference = f"PAY-{uuid.uuid4().hex[:8].upper()}"
+
+        # Calculate net amount if not set
+        if not self.net_amount:
+            self.net_amount = self.gross_amount - self.commission_amount - self.fees_amount
+
+        super().save(*args, **kwargs)
+
+    def mark_processing(self, processed_by):
+        """Mark payout as processing"""
+        self.status = 'processing'
+        self.processed_by = processed_by
+        self.save()
+
+    def mark_completed(self, transaction_reference=None):
+        """Mark payout as completed"""
+        self.status = 'completed'
+        self.processed_at = timezone.now()
+        if transaction_reference:
+            self.transaction_reference = transaction_reference
+        self.save()
+
+    def mark_failed(self, reason):
+        """Mark payout as failed"""
+        self.status = 'failed'
+        self.failure_reason = reason
+        self.save()
+
+
+class Refund(models.Model):
+    """
+    Refund Model - Tracks refunds for orders/payments
+    """
+
+    REFUND_STATUS = (
+        ('pending', _('Pending')),
+        ('approved', _('Approved')),
+        ('processing', _('Processing')),
+        ('completed', _('Completed')),
+        ('rejected', _('Rejected')),
+    )
+
+    REFUND_REASON = (
+        ('customer_request', _('Customer Request')),
+        ('defective_product', _('Defective Product')),
+        ('wrong_item', _('Wrong Item Delivered')),
+        ('not_as_described', _('Not as Described')),
+        ('delivery_issue', _('Delivery Issue')),
+        ('duplicate_order', _('Duplicate Order')),
+        ('cancelled_order', _('Cancelled Order')),
+        ('other', _('Other')),
+    )
+
+    REFUND_METHOD = (
+        ('original_payment', _('Original Payment Method')),
+        ('bank_transfer', _('Bank Transfer')),
+        ('store_credit', _('Store Credit')),
+        ('cash', _('Cash')),
+    )
+
+    # Refund Reference
+    refund_reference = models.CharField(_('Refund Reference'), max_length=50, unique=True)
+
+    # Related Objects
+    order = models.ForeignKey('orders.Order', on_delete=models.CASCADE, related_name='refunds',
+                             verbose_name=_('Order'))
+    payment = models.ForeignKey('finance.Payment', on_delete=models.SET_NULL, null=True, blank=True,
+                               related_name='refunds', verbose_name=_('Original Payment'))
+
+    # Amount Details
+    refund_amount = models.DecimalField(_('Refund Amount'), max_digits=10, decimal_places=2)
+    currency = models.CharField(_('Currency'), max_length=3, default='AED')
+
+    # Refund Details
+    reason = models.CharField(_('Reason'), max_length=30, choices=REFUND_REASON)
+    reason_details = models.TextField(_('Reason Details'), blank=True)
+    refund_method = models.CharField(_('Refund Method'), max_length=20, choices=REFUND_METHOD,
+                                    default='original_payment')
+    status = models.CharField(_('Status'), max_length=20, choices=REFUND_STATUS, default='pending')
+
+    # Customer Details
+    customer_name = models.CharField(_('Customer Name'), max_length=255)
+    customer_email = models.EmailField(_('Customer Email'), blank=True)
+    customer_phone = models.CharField(_('Customer Phone'), max_length=20, blank=True)
+
+    # Approval Details
+    requested_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='requested_refunds', verbose_name=_('Requested By'))
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='approved_refunds', verbose_name=_('Approved By'))
+    approved_at = models.DateTimeField(_('Approved At'), null=True, blank=True)
+
+    # Processing Details
+    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='finance_processed_refunds', verbose_name=_('Processed By'))
+    processed_at = models.DateTimeField(_('Processed At'), null=True, blank=True)
+    transaction_reference = models.CharField(_('Transaction Reference'), max_length=100, blank=True)
+
+    # Notes
+    notes = models.TextField(_('Notes'), blank=True)
+    rejection_reason = models.TextField(_('Rejection Reason'), blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Refund')
+        verbose_name_plural = _('Refunds')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.refund_reference} - {self.order.order_code} - {self.refund_amount} {self.currency}"
+
+    def save(self, *args, **kwargs):
+        # Generate refund reference if not set
+        if not self.refund_reference:
+            import uuid
+            self.refund_reference = f"REF-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+
+    def approve(self, approved_by):
+        """Approve the refund"""
+        self.status = 'approved'
+        self.approved_by = approved_by
+        self.approved_at = timezone.now()
+        self.save()
+
+    def reject(self, rejected_by, reason):
+        """Reject the refund"""
+        self.status = 'rejected'
+        self.approved_by = rejected_by
+        self.approved_at = timezone.now()
+        self.rejection_reason = reason
+        self.save()
+
+    def process(self, processed_by, transaction_reference=None):
+        """Process the refund"""
+        self.status = 'processing'
+        self.processed_by = processed_by
+        if transaction_reference:
+            self.transaction_reference = transaction_reference
+        self.save()
+
+    def complete(self, transaction_reference=None):
+        """Complete the refund"""
+        self.status = 'completed'
+        self.processed_at = timezone.now()
+        if transaction_reference:
+            self.transaction_reference = transaction_reference
+        self.save()
+
+        # Update original payment status
+        if self.payment:
+            self.payment.payment_status = 'refunded'
+            self.payment.save()

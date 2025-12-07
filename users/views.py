@@ -1049,3 +1049,362 @@ def force_password_change(request):
         form = PasswordChangeForm(user=request.user)
 
     return render(request, 'users/force_password_change.html', {'form': form})
+
+
+# ============= Roles Management Views =============
+
+@login_required
+def roles_list(request):
+    """List all roles and their permissions."""
+    from roles.models import Role, Permission
+    from django.core.paginator import Paginator
+
+    roles = Role.objects.prefetch_related('permissions').order_by('name')
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+
+    if search_query:
+        roles = roles.filter(name__icontains=search_query)
+
+    # Pagination
+    paginator = Paginator(roles, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_roles = Role.objects.count()
+    total_permissions = Permission.objects.count()
+    users_per_role = {}
+    for role in Role.objects.all():
+        users_per_role[role.name] = User.objects.filter(primary_role=role).count()
+
+    context = {
+        'page_obj': page_obj,
+        'total_roles': total_roles,
+        'total_permissions': total_permissions,
+        'users_per_role': users_per_role,
+        'search_query': search_query,
+    }
+
+    return render(request, 'users/roles_list.html', context)
+
+
+@login_required
+def create_role(request):
+    """Create a new role."""
+    from roles.models import Role, Permission
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        permission_ids = request.POST.getlist('permissions')
+
+        if name:
+            try:
+                role = Role.objects.create(name=name, description=description)
+                if permission_ids:
+                    permissions = Permission.objects.filter(id__in=permission_ids)
+                    role.permissions.set(permissions)
+
+                messages.success(request, f'Role "{name}" created successfully.')
+                return redirect('users:roles')
+            except Exception as e:
+                messages.error(request, f'Error creating role: {str(e)}')
+        else:
+            messages.error(request, 'Role name is required.')
+
+    permissions = Permission.objects.all().order_by('codename')
+
+    context = {
+        'permissions': permissions,
+    }
+
+    return render(request, 'users/create_role.html', context)
+
+
+@login_required
+def edit_role(request, role_id):
+    """Edit an existing role."""
+    from roles.models import Role, Permission
+
+    role = get_object_or_404(Role, id=role_id)
+
+    if request.method == 'POST':
+        role.name = request.POST.get('name', role.name)
+        role.description = request.POST.get('description', '')
+        permission_ids = request.POST.getlist('permissions')
+
+        try:
+            role.save()
+            if permission_ids:
+                permissions = Permission.objects.filter(id__in=permission_ids)
+                role.permissions.set(permissions)
+            else:
+                role.permissions.clear()
+
+            messages.success(request, f'Role "{role.name}" updated successfully.')
+            return redirect('users:roles')
+        except Exception as e:
+            messages.error(request, f'Error updating role: {str(e)}')
+
+    permissions = Permission.objects.all().order_by('codename')
+    role_permissions = role.permissions.values_list('id', flat=True)
+
+    context = {
+        'role': role,
+        'permissions': permissions,
+        'role_permissions': list(role_permissions),
+    }
+
+    return render(request, 'users/edit_role.html', context)
+
+
+@login_required
+def manage_role_permissions(request, role_id):
+    """Manage permissions for a specific role."""
+    from roles.models import Role, Permission
+
+    role = get_object_or_404(Role, id=role_id)
+
+    if request.method == 'POST':
+        permission_codes = request.POST.getlist('permissions')
+        try:
+            # Clear existing and set new permissions based on codenames
+            role.permissions.clear()
+            if permission_codes:
+                for code in permission_codes:
+                    perm, created = Permission.objects.get_or_create(codename=code, defaults={'name': code.replace('.', ' ').replace('_', ' ').title()})
+                    role.permissions.add(perm)
+
+            messages.success(request, f'Permissions updated for role "{role.name}".')
+            return redirect('users:roles')
+        except Exception as e:
+            messages.error(request, f'Error updating permissions: {str(e)}')
+
+    permissions = Permission.objects.all().order_by('codename')
+    role_permissions = role.permissions.values_list('id', flat=True)
+
+    # Get current permission codenames for template
+    current_permissions = list(role.permissions.values_list('codename', flat=True))
+
+    # Group permissions by category
+    permission_groups = {}
+    for permission in permissions:
+        category = permission.codename.split('_')[0] if '_' in permission.codename else 'general'
+        if category not in permission_groups:
+            permission_groups[category] = []
+        permission_groups[category].append(permission)
+
+    context = {
+        'role': role,
+        'permissions': permissions,
+        'permission_groups': permission_groups,
+        'role_permissions': list(role_permissions),
+        'current_permissions': current_permissions,
+    }
+
+    return render(request, 'users/role_permissions.html', context)
+
+
+# ============= User Settings Views =============
+
+@login_required
+def user_settings(request):
+    """User personal settings page."""
+    user = request.user
+
+    if request.method == 'POST':
+        # Update user settings
+        user.email_notifications = request.POST.get('email_notifications') == 'on'
+        user.sms_notifications = request.POST.get('sms_notifications') == 'on'
+
+        # Language preference
+        language = request.POST.get('language', 'en')
+        if hasattr(user, 'language'):
+            user.language = language
+
+        # Timezone
+        timezone_pref = request.POST.get('timezone', 'Asia/Dubai')
+        if hasattr(user, 'timezone'):
+            user.timezone = timezone_pref
+
+        try:
+            user.save()
+            messages.success(request, 'Settings updated successfully.')
+        except Exception as e:
+            messages.error(request, f'Error updating settings: {str(e)}')
+
+        return redirect('users:settings')
+
+    context = {
+        'user': user,
+    }
+
+    return render(request, 'users/user_settings.html', context)
+
+
+@login_required
+def notification_settings(request):
+    """Notification preferences settings."""
+    user = request.user
+
+    if request.method == 'POST':
+        # Update notification preferences
+        user.email_notifications = request.POST.get('email_enabled') == 'on'
+        user.sms_notifications = request.POST.get('sms_enabled') == 'on'
+
+        # More granular notification settings
+        if hasattr(user, 'notify_on_order'):
+            user.notify_on_order = request.POST.get('notify_new_orders') == 'on'
+        if hasattr(user, 'notify_on_stock'):
+            user.notify_on_stock = request.POST.get('notify_low_stock') == 'on'
+        if hasattr(user, 'notify_on_payment'):
+            user.notify_on_payment = request.POST.get('notify_payments') == 'on'
+
+        try:
+            user.save()
+            messages.success(request, 'Notification settings updated successfully.')
+        except Exception as e:
+            messages.error(request, f'Error updating notification settings: {str(e)}')
+
+        return redirect('users:notification_settings')
+
+    # Build settings dict from user attributes
+    settings = {
+        'notify_new_orders': getattr(user, 'notify_on_order', True),
+        'notify_order_status': True,
+        'notify_low_stock': getattr(user, 'notify_on_stock', True),
+        'notify_stock_updates': True,
+        'notify_payments': getattr(user, 'notify_on_payment', True),
+        'notify_payouts': True,
+        'email_enabled': getattr(user, 'email_notifications', True),
+        'sms_enabled': getattr(user, 'sms_notifications', False),
+        'push_enabled': True,
+    }
+
+    context = {
+        'user': user,
+        'settings': settings,
+    }
+
+    return render(request, 'users/notification_settings.html', context)
+
+
+# ============= Two-Factor Authentication Views =============
+
+@login_required
+def two_factor_settings(request):
+    """Two-factor authentication settings page."""
+    user = request.user
+
+    # Check if user has 2FA enabled
+    has_2fa = hasattr(user, 'totp_secret') and user.totp_secret
+
+    context = {
+        'has_2fa': has_2fa,
+    }
+
+    return render(request, 'users/two_factor_settings.html', context)
+
+
+@login_required
+def enable_two_factor(request):
+    """Enable two-factor authentication."""
+    import pyotp
+    import qrcode
+    import io
+    import base64
+
+    user = request.user
+
+    if request.method == 'POST':
+        # Verify the TOTP code
+        totp_code = request.POST.get('totp_code', '')
+        secret = request.session.get('pending_totp_secret')
+
+        if secret:
+            totp = pyotp.TOTP(secret)
+            if totp.verify(totp_code):
+                user.totp_secret = secret
+                user.save()
+
+                # Clean up session
+                del request.session['pending_totp_secret']
+
+                messages.success(request, 'Two-factor authentication has been enabled successfully.')
+                return redirect('users:two_factor')
+            else:
+                messages.error(request, 'Invalid verification code. Please try again.')
+        else:
+            messages.error(request, 'Session expired. Please try again.')
+
+    # Generate a new TOTP secret
+    secret = pyotp.random_base32()
+    request.session['pending_totp_secret'] = secret
+
+    # Generate QR code
+    totp = pyotp.TOTP(secret)
+    provisioning_uri = totp.provisioning_uri(user.email, issuer_name="Atlas CRM")
+
+    try:
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    except Exception:
+        qr_code_base64 = None
+
+    context = {
+        'secret': secret,
+        'qr_code': qr_code_base64,
+    }
+
+    return render(request, 'users/enable_two_factor.html', context)
+
+
+@login_required
+def disable_two_factor(request):
+    """Disable two-factor authentication."""
+    user = request.user
+
+    if request.method == 'POST':
+        # Verify password before disabling
+        password = request.POST.get('password', '')
+
+        if user.check_password(password):
+            user.totp_secret = None
+            user.save()
+            messages.success(request, 'Two-factor authentication has been disabled.')
+            return redirect('users:two_factor')
+        else:
+            messages.error(request, 'Invalid password. Please try again.')
+
+    return render(request, 'users/disable_two_factor.html')
+
+
+@login_required
+def verify_two_factor(request):
+    """Verify two-factor authentication code."""
+    import pyotp
+
+    if request.method == 'POST':
+        totp_code = request.POST.get('totp_code', '')
+        user = request.user
+
+        if hasattr(user, 'totp_secret') and user.totp_secret:
+            totp = pyotp.TOTP(user.totp_secret)
+            if totp.verify(totp_code):
+                request.session['2fa_verified'] = True
+                messages.success(request, 'Two-factor authentication verified.')
+                return redirect('dashboard:index')
+            else:
+                messages.error(request, 'Invalid verification code.')
+        else:
+            messages.error(request, 'Two-factor authentication is not enabled.')
+
+    return render(request, 'users/verify_two_factor.html')

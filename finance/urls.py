@@ -58,4 +58,26 @@ urlpatterns = [
     path('payment-platforms/<int:platform_id>/test/', views.test_platform_connection, name='test_platform_connection'),
     path('payment-platforms/<int:platform_id>/sync/', views.sync_platform_data, name='sync_platform_data'),
     path('payment-platforms/<int:platform_id>/logs/', views.platform_sync_logs, name='platform_sync_logs'),
+
+    # COD Management
+    path('cod/', views.cod_management, name='cod'),
+    path('cod/<int:cod_id>/collect/', views.cod_collect, name='cod_collect'),
+    path('cod/<int:cod_id>/reconcile/', views.cod_reconcile, name='cod_reconcile'),
+
+    # Seller Payouts
+    path('payouts/', views.seller_payouts, name='payouts'),
+    path('payouts/create/', views.create_payout, name='create_payout'),
+    path('payouts/<int:payout_id>/', views.payout_detail, name='payout_detail'),
+    path('payouts/<int:payout_id>/process/', views.process_payout, name='process_payout'),
+
+    # Refunds
+    path('refunds/', views.refunds_list, name='refunds'),
+    path('refunds/create/', views.create_refund, name='create_refund'),
+    path('refunds/<int:refund_id>/', views.refund_detail, name='refund_detail'),
+    path('refunds/<int:refund_id>/approve/', views.approve_refund, name='approve_refund'),
+    path('refunds/<int:refund_id>/process/', views.process_refund, name='process_refund'),
+
+    # Reconciliation
+    path('reconciliation/', views.reconciliation, name='reconciliation'),
+    path('reconciliation/auto-match/', views.reconciliation_auto_match, name='reconciliation_auto_match'),
 ]

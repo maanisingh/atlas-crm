@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Refund Details{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-file-invoice text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-semibold text-red-600">Refund Details</h1>
+                        <p class="mt-1 text-sm text-gray-500">{{ refund.refund_reference }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'finance:refunds' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Order</h3>
+                    <p class="mt-1 text-lg font-medium text-gray-900">{{ refund.order.order_code|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Status</h3>
+                    <p class="mt-1">
+                        {% if refund.status == 'completed' %}
+                            <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">Completed</span>
+                        {% elif refund.status == 'pending' %}
+                            <span class="px-3 py-1 text-sm font-medium rounded-full bg-orange-100 text-orange-800">Pending</span>
+                        {% elif refund.status == 'approved' %}
+                            <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">Approved</span>
+                        {% elif refund.status == 'rejected' %}
+                            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">Rejected</span>
+                        {% else %}
+                            <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">{{ refund.get_status_display }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-red-50 rounded-lg p-4 mb-6">
+                <h3 class="text-sm font-medium text-red-800">Refund Amount</h3>
+                <p class="mt-1 text-3xl font-bold text-red-600">AED {{ refund.refund_amount|floatformat:2 }}</p>
+            </div>
+
+            <hr class="my-6">
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Customer Name</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.customer_name }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Reason</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.get_refund_reason_display }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Customer Email</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.customer_email|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Customer Phone</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.customer_phone|default:"Not provided" }}</p>
+                </div>
+            </div>
+
+            {% if refund.reason_details %}
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-gray-500">Reason Details</h3>
+                <p class="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded">{{ refund.reason_details }}</p>
+            </div>
+            {% endif %}
+
+            <hr class="my-6">
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Requested By</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.requested_by.get_full_name|default:"System" }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Created At</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                {% if refund.approved_by %}
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Approved By</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.approved_by.get_full_name }}</p>
+                </div>
+                {% endif %}
+                {% if refund.approved_at %}
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Approved At</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ refund.approved_at|date:"M d, Y H:i" }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if refund.status == 'pending' %}
+            <hr class="my-6">
+            <div class="flex justify-end">
+                <a href="{% url 'finance:approve_refund' refund.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    <i class="fas fa-check mr-2"></i>Review & Approve
+                </a>
+            </div>
+            {% elif refund.status == 'approved' %}
+            <hr class="my-6">
+            <div class="flex justify-end">
+                <a href="{% url 'finance:process_refund' refund.id %}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    <i class="fas fa-cog mr-2"></i>Process Refund
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

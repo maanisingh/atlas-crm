@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Process Refund{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-cogs text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-green-600">Process Refund</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ refund.refund_reference }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Refund Summary</h3>
+            <dl class="grid grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Order</dt>
+                    <dd class="text-sm text-gray-900">{{ refund.order.order_code|default:"N/A" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Amount</dt>
+                    <dd class="text-lg font-bold text-red-600">AED {{ refund.refund_amount|floatformat:2 }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Customer</dt>
+                    <dd class="text-sm text-gray-900">{{ refund.customer_name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Approved By</dt>
+                    <dd class="text-sm text-gray-900">{{ refund.approved_by.get_full_name }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Complete Refund Processing</h3>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Refund Method</label>
+                        <select name="refund_method" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="credit_card">Credit Card Reversal</option>
+                            <option value="cash">Cash</option>
+                            <option value="wallet">Wallet Credit</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Transaction Reference</label>
+                        <input type="text" name="transaction_reference" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Bank/transaction reference">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <a href="{% url 'finance:refunds' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</a>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        <i class="fas fa-check-double mr-2"></i>Complete Refund
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-6 flex justify-start">
+            <a href="{% url 'finance:refunds' %}" class="text-gray-600 hover:text-gray-800">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Refunds
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

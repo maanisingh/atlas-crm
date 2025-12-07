@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Call Center Agents{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-headset text-orange-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-semibold text-orange-600">Call Center Agents</h1>
+                        <p class="mt-1 text-sm text-gray-500">Manage and monitor agent performance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Total Agents</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_agents }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-user-check text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Active Agents</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.active_agents }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-circle text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Online Now</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.online_agents }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
+            <form method="GET" class="flex gap-4 items-center">
+                <select name="status" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">All Agents</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+                <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </form>
+        </div>
+
+        <!-- Agents Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for agent in agents %}
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span class="text-xl font-bold text-orange-600">
+                                {{ agent.first_name|slice:":1" }}{{ agent.last_name|slice:":1" }}
+                            </span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">{{ agent.get_full_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ agent.email }}</p>
+                        </div>
+                        {% if agent.is_active %}
+                            <span class="ml-auto px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="ml-auto px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500">Total Orders</p>
+                            <p class="text-lg font-bold text-gray-900">{{ agent.total_orders }}</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500">Completed</p>
+                            <p class="text-lg font-bold text-green-600">{{ agent.completed_orders }}</p>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500">Pending</p>
+                            <p class="text-lg font-bold text-yellow-600">{{ agent.pending_orders }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'callcenter:agent_performance' agent.id %}"
+                           class="flex-1 text-center px-3 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 text-sm">
+                            <i class="fas fa-chart-line mr-1"></i>Performance
+                        </a>
+                        <a href="{% url 'callcenter:agent_schedule' agent.id %}"
+                           class="flex-1 text-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm">
+                            <i class="fas fa-calendar-alt mr-1"></i>Schedule
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 bg-white rounded-lg border border-gray-200 shadow-sm p-12 text-center">
+                <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-500">No agents found</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

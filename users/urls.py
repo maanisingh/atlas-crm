@@ -25,4 +25,20 @@ urlpatterns = [
     # User Management Actions
     path('<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('<int:user_id>/toggle-status/', views.toggle_user_status, name='toggle_user_status'),
+
+    # Roles Management
+    path('roles/', views.roles_list, name='roles'),
+    path('roles/create/', views.create_role, name='create_role'),
+    path('roles/<int:role_id>/edit/', views.edit_role, name='edit_role'),
+    path('roles/<int:role_id>/permissions/', views.manage_role_permissions, name='role_permissions'),
+
+    # User Settings
+    path('settings/', views.user_settings, name='settings'),
+    path('settings/notifications/', views.notification_settings, name='notification_settings'),
+
+    # Two-Factor Authentication
+    path('2fa/', views.two_factor_settings, name='two_factor'),
+    path('2fa/enable/', views.enable_two_factor, name='enable_two_factor'),
+    path('2fa/disable/', views.disable_two_factor, name='disable_two_factor'),
+    path('2fa/verify/', views.verify_two_factor, name='verify_two_factor'),
 ]

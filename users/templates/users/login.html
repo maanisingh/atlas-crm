@@ -162,11 +162,64 @@
         </div>
         {% endif %}
       </form>
-      
+
+      <!-- Demo Credentials Section -->
+      <div class="mt-8 rounded-lg bg-blue-50 border border-blue-200 p-4">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3 flex-1">
+            <h3 class="text-sm font-medium text-blue-800">
+              Demo Login Credentials
+            </h3>
+            <div class="mt-2 text-xs text-blue-700">
+              <p class="mb-2 font-semibold">Try the platform with these accounts:</p>
+              <div class="grid grid-cols-1 gap-1.5">
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Super Admin:</span>
+                  <span class="font-mono">superadmin@atlas.com / admin123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Admin:</span>
+                  <span class="font-mono">admin@atlas.com / admin123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Seller:</span>
+                  <span class="font-mono">seller@atlas.com / seller123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Call Center:</span>
+                  <span class="font-mono">callcenter@atlas.com / callcenter123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Manager:</span>
+                  <span class="font-mono">manager@atlas.com / manager123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Stock Keeper:</span>
+                  <span class="font-mono">stockkeeper@atlas.com / stock123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Packaging:</span>
+                  <span class="font-mono">packaging@atlas.com / package123</span>
+                </div>
+                <div class="flex justify-between items-center bg-white bg-opacity-50 rounded px-2 py-1">
+                  <span class="font-medium">Delivery:</span>
+                  <span class="font-mono">delivery@atlas.com / delivery123</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Register Link -->
       <div class="text-center mt-6">
         <p class="text-sm text-gray-600">
-          Don't have an account? 
+          Don't have an account?
           <a href="{% url 'users:register' %}" class="font-medium text-yellow-600 hover:text-yellow-500 transition-colors">
             Register here
           </a>

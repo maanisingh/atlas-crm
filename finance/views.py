@@ -2280,3 +2280,611 @@ def delete_invoice(request, invoice_id):
     }
     
     return render(request, 'finance/delete_invoice.html', context)
+
+
+# ============= COD Management Views =============
+
+@login_required
+def cod_management(request):
+    """COD (Cash on Delivery) Management Dashboard."""
+    from orders.models import Order
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
+
+    # Get COD payments
+    cod_payments = Payment.objects.filter(
+        payment_method='cod'
+    ).select_related('order').order_by('-payment_date')
+
+    # Apply filters
+    if status_filter:
+        cod_payments = cod_payments.filter(payment_status=status_filter)
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            cod_payments = cod_payments.filter(payment_date__date__gte=date_from_obj)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            cod_payments = cod_payments.filter(payment_date__date__lte=date_to_obj)
+        except ValueError:
+            pass
+
+    if search_query:
+        cod_payments = cod_payments.filter(
+            Q(order__order_code__icontains=search_query) |
+            Q(customer_name__icontains=search_query) |
+            Q(transaction_id__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(cod_payments, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_cod = cod_payments.aggregate(total=Sum('amount'))['total'] or 0
+    pending_cod = cod_payments.filter(payment_status='pending').aggregate(total=Sum('amount'))['total'] or 0
+    collected_cod = cod_payments.filter(payment_status='completed').aggregate(total=Sum('amount'))['total'] or 0
+
+    # COD by delivery agent (from orders)
+    cod_by_agent = cod_payments.values(
+        'order__delivery_agent__first_name',
+        'order__delivery_agent__last_name'
+    ).annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')[:10]
+
+    context = {
+        'page_obj': page_obj,
+        'total_cod': total_cod,
+        'pending_cod': pending_cod,
+        'collected_cod': collected_cod,
+        'cod_by_agent': cod_by_agent,
+        'current_status': status_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search_query': search_query,
+        'status_choices': Payment.PAYMENT_STATUS,
+    }
+
+    return render(request, 'finance/cod_management.html', context)
+
+
+@login_required
+def cod_collect(request, cod_id):
+    """Mark COD as collected."""
+    payment = get_object_or_404(Payment, id=cod_id, payment_method='cod')
+
+    if request.method == 'POST':
+        payment.payment_status = 'completed'
+        payment.is_verified = True
+        payment.verified_at = timezone.now()
+        payment.verified_by = request.user
+        payment.notes = request.POST.get('notes', '') + f"\nCollected by {request.user.get_full_name()} on {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+        payment.save()
+
+        messages.success(request, f'COD payment of AED {payment.amount} marked as collected.')
+        return redirect('finance:cod')
+
+    context = {
+        'payment': payment,
+    }
+
+    return render(request, 'finance/cod_collect.html', context)
+
+
+@login_required
+def cod_reconcile(request, cod_id):
+    """Reconcile COD payment with bank deposit."""
+    payment = get_object_or_404(Payment, id=cod_id, payment_method='cod')
+
+    if request.method == 'POST':
+        bank_reference = request.POST.get('bank_reference', '')
+        deposited_amount = request.POST.get('deposited_amount', payment.amount)
+
+        payment.transaction_id = bank_reference
+        payment.is_verified = True
+        payment.verified_at = timezone.now()
+        payment.verified_by = request.user
+        payment.notes = payment.notes + f"\nReconciled with bank ref: {bank_reference}, Amount: {deposited_amount}"
+        payment.save()
+
+        messages.success(request, f'COD payment reconciled with bank reference {bank_reference}.')
+        return redirect('finance:cod')
+
+    context = {
+        'payment': payment,
+    }
+
+    return render(request, 'finance/cod_reconcile.html', context)
+
+
+# ============= Seller Payouts Views =============
+
+@login_required
+def seller_payouts(request):
+    """Seller Payouts Management Dashboard."""
+    from .models import SellerPayout
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    seller_filter = request.GET.get('seller', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
+
+    # Get payouts
+    payouts = SellerPayout.objects.select_related('seller', 'processed_by').order_by('-created_at')
+
+    # Apply filters
+    if status_filter:
+        payouts = payouts.filter(status=status_filter)
+
+    if seller_filter:
+        payouts = payouts.filter(seller_id=seller_filter)
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            payouts = payouts.filter(created_at__date__gte=date_from_obj)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            payouts = payouts.filter(created_at__date__lte=date_to_obj)
+        except ValueError:
+            pass
+
+    if search_query:
+        payouts = payouts.filter(
+            Q(payout_reference__icontains=search_query) |
+            Q(seller__email__icontains=search_query) |
+            Q(seller__first_name__icontains=search_query) |
+            Q(seller__last_name__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(payouts, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_payouts = payouts.aggregate(total=Sum('net_amount'))['total'] or 0
+    pending_payouts = payouts.filter(status='pending').aggregate(total=Sum('net_amount'))['total'] or 0
+    completed_payouts = payouts.filter(status='completed').aggregate(total=Sum('net_amount'))['total'] or 0
+
+    # Get sellers for filter dropdown
+    sellers = User.objects.filter(payouts__isnull=False).distinct()
+
+    context = {
+        'page_obj': page_obj,
+        'total_payouts': total_payouts,
+        'pending_payouts': pending_payouts,
+        'completed_payouts': completed_payouts,
+        'sellers': sellers,
+        'current_status': status_filter,
+        'current_seller': seller_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search_query': search_query,
+        'status_choices': SellerPayout.PAYOUT_STATUS,
+    }
+
+    return render(request, 'finance/seller_payouts.html', context)
+
+
+@login_required
+def create_payout(request):
+    """Create a new seller payout."""
+    from .models import SellerPayout
+
+    if request.method == 'POST':
+        seller_id = request.POST.get('seller_id')
+        gross_amount = request.POST.get('gross_amount')
+        commission_rate = request.POST.get('commission_rate', 10)
+
+        try:
+            seller = User.objects.get(id=seller_id)
+            gross = float(gross_amount)
+            commission = gross * (float(commission_rate) / 100)
+            net = gross - commission
+
+            payout = SellerPayout.objects.create(
+                seller=seller,
+                gross_amount=gross,
+                commission_amount=commission,
+                net_amount=net,
+                period_start=request.POST.get('period_start'),
+                period_end=request.POST.get('period_end'),
+                bank_name=request.POST.get('bank_name', ''),
+                account_number=request.POST.get('account_number', ''),
+                notes=request.POST.get('notes', ''),
+            )
+
+            messages.success(request, f'Payout {payout.payout_reference} created for {seller.get_full_name()}.')
+            return redirect('finance:payouts')
+
+        except Exception as e:
+            messages.error(request, f'Error creating payout: {str(e)}')
+
+    # Get sellers with sales
+    sellers = User.objects.filter(product__isnull=False).distinct()
+
+    context = {
+        'sellers': sellers,
+    }
+
+    return render(request, 'finance/create_payout.html', context)
+
+
+@login_required
+def payout_detail(request, payout_id):
+    """View payout details."""
+    from .models import SellerPayout
+
+    payout = get_object_or_404(SellerPayout, id=payout_id)
+
+    context = {
+        'payout': payout,
+    }
+
+    return render(request, 'finance/payout_detail.html', context)
+
+
+@login_required
+def process_payout(request, payout_id):
+    """Process a seller payout."""
+    from .models import SellerPayout
+
+    payout = get_object_or_404(SellerPayout, id=payout_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'approve':
+            payout.status = 'processing'
+            payout.processed_by = request.user
+            payout.processed_at = timezone.now()
+            messages.success(request, f'Payout {payout.payout_reference} approved for processing.')
+
+        elif action == 'complete':
+            payout.status = 'completed'
+            payout.transaction_reference = request.POST.get('transaction_reference', '')
+            payout.processed_at = timezone.now()
+            messages.success(request, f'Payout {payout.payout_reference} marked as completed.')
+
+        elif action == 'reject':
+            payout.status = 'failed'
+            payout.notes = payout.notes + f"\nRejected by {request.user.get_full_name()}: {request.POST.get('rejection_reason', '')}"
+            messages.warning(request, f'Payout {payout.payout_reference} rejected.')
+
+        payout.save()
+        return redirect('finance:payouts')
+
+    context = {
+        'payout': payout,
+    }
+
+    return render(request, 'finance/process_payout.html', context)
+
+
+# ============= Refunds Views =============
+
+@login_required
+def refunds_list(request):
+    """Refunds Management Dashboard."""
+    from .models import Refund
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    reason_filter = request.GET.get('reason', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
+
+    # Get refunds
+    refunds = Refund.objects.select_related('order', 'requested_by', 'approved_by').order_by('-created_at')
+
+    # Apply filters
+    if status_filter:
+        refunds = refunds.filter(status=status_filter)
+
+    if reason_filter:
+        refunds = refunds.filter(refund_reason=reason_filter)
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            refunds = refunds.filter(created_at__date__gte=date_from_obj)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            refunds = refunds.filter(created_at__date__lte=date_to_obj)
+        except ValueError:
+            pass
+
+    if search_query:
+        refunds = refunds.filter(
+            Q(refund_reference__icontains=search_query) |
+            Q(order__order_code__icontains=search_query) |
+            Q(customer_name__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(refunds, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_refunds = refunds.aggregate(total=Sum('refund_amount'))['total'] or 0
+    pending_refunds = refunds.filter(status='pending').aggregate(total=Sum('refund_amount'))['total'] or 0
+    approved_refunds = refunds.filter(status='approved').aggregate(total=Sum('refund_amount'))['total'] or 0
+    completed_refunds = refunds.filter(status='completed').aggregate(total=Sum('refund_amount'))['total'] or 0
+
+    context = {
+        'page_obj': page_obj,
+        'total_refunds': total_refunds,
+        'pending_refunds': pending_refunds,
+        'approved_refunds': approved_refunds,
+        'completed_refunds': completed_refunds,
+        'current_status': status_filter,
+        'current_reason': reason_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search_query': search_query,
+        'status_choices': Refund.REFUND_STATUS,
+        'reason_choices': Refund.REFUND_REASON,
+    }
+
+    return render(request, 'finance/refunds_list.html', context)
+
+
+@login_required
+def create_refund(request):
+    """Create a new refund request."""
+    from .models import Refund
+    from orders.models import Order
+
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        refund_amount = request.POST.get('refund_amount')
+        refund_reason = request.POST.get('refund_reason')
+
+        try:
+            order = Order.objects.get(id=order_id)
+
+            refund = Refund.objects.create(
+                order=order,
+                refund_amount=float(refund_amount),
+                refund_reason=refund_reason,
+                customer_name=order.customer,
+                customer_email=getattr(order, 'customer_email', ''),
+                customer_phone=getattr(order, 'customer_phone', ''),
+                reason_details=request.POST.get('reason_details', ''),
+                requested_by=request.user,
+            )
+
+            messages.success(request, f'Refund request {refund.refund_reference} created.')
+            return redirect('finance:refunds')
+
+        except Exception as e:
+            messages.error(request, f'Error creating refund: {str(e)}')
+
+    # Get orders that can be refunded
+    orders = Order.objects.filter(
+        status__in=['delivered', 'shipped', 'completed']
+    ).order_by('-date')[:50]
+
+    context = {
+        'orders': orders,
+        'reason_choices': Refund.REFUND_REASON,
+    }
+
+    return render(request, 'finance/create_refund.html', context)
+
+
+@login_required
+def refund_detail(request, refund_id):
+    """View refund details."""
+    from .models import Refund
+
+    refund = get_object_or_404(Refund, id=refund_id)
+
+    context = {
+        'refund': refund,
+    }
+
+    return render(request, 'finance/refund_detail.html', context)
+
+
+@login_required
+def approve_refund(request, refund_id):
+    """Approve a refund request."""
+    from .models import Refund
+
+    refund = get_object_or_404(Refund, id=refund_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'approve':
+            refund.status = 'approved'
+            refund.approved_by = request.user
+            refund.approved_at = timezone.now()
+            refund.approval_notes = request.POST.get('approval_notes', '')
+            messages.success(request, f'Refund {refund.refund_reference} approved.')
+
+        elif action == 'reject':
+            refund.status = 'rejected'
+            refund.approved_by = request.user
+            refund.approved_at = timezone.now()
+            refund.rejection_reason = request.POST.get('rejection_reason', '')
+            messages.warning(request, f'Refund {refund.refund_reference} rejected.')
+
+        refund.save()
+        return redirect('finance:refunds')
+
+    context = {
+        'refund': refund,
+    }
+
+    return render(request, 'finance/approve_refund.html', context)
+
+
+@login_required
+def process_refund(request, refund_id):
+    """Process an approved refund."""
+    from .models import Refund
+
+    refund = get_object_or_404(Refund, id=refund_id, status='approved')
+
+    if request.method == 'POST':
+        refund.status = 'completed'
+        refund.processed_by = request.user
+        refund.processed_at = timezone.now()
+        refund.transaction_reference = request.POST.get('transaction_reference', '')
+        refund.refund_method = request.POST.get('refund_method', 'bank_transfer')
+        refund.save()
+
+        messages.success(request, f'Refund {refund.refund_reference} processed successfully.')
+        return redirect('finance:refunds')
+
+    context = {
+        'refund': refund,
+    }
+
+    return render(request, 'finance/process_refund.html', context)
+
+
+# ============= Reconciliation Views =============
+
+@login_required
+def reconciliation(request):
+    """Financial Reconciliation Dashboard."""
+    today = timezone.now().date()
+
+    # Get all payments for reconciliation
+    all_payments = Payment.objects.select_related('order', 'seller').order_by('-payment_date')
+
+    # Calculate statistics
+    total_payments = all_payments.count()
+
+    # Matched payments (verified and completed)
+    matched_payments = all_payments.filter(
+        payment_status='completed',
+        is_verified=True
+    )
+    matched_count = matched_payments.count()
+    matched_amount = matched_payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    # Unmatched payments (pending or not verified)
+    unmatched_payments = all_payments.filter(
+        Q(payment_status='pending') | Q(is_verified=False)
+    )
+    unmatched_count = unmatched_payments.count()
+    unmatched_amount = unmatched_payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    # Discrepancies
+    discrepancy_payments = all_payments.filter(processor_fee__gt=0)
+    discrepancy_count = discrepancy_payments.count()
+    discrepancy_amount = discrepancy_payments.aggregate(total=Sum('processor_fee'))['total'] or 0
+
+    # Recent unmatched for action
+    recent_unmatched = unmatched_payments.filter(
+        payment_date__gte=today - timedelta(days=30)
+    )[:20]
+
+    # Payment methods stats
+    payment_methods_stats = all_payments.values('payment_method').annotate(
+        count=Count('id'),
+        total=Sum('amount')
+    ).order_by('-total')
+
+    # Monthly reconciliation summary
+    monthly_reconciliation = []
+    for i in range(6):
+        month_date = (today.replace(day=1) - relativedelta(months=i))
+        month_matched = Payment.objects.filter(
+            payment_status='completed',
+            is_verified=True,
+            payment_date__year=month_date.year,
+            payment_date__month=month_date.month
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        month_unmatched = Payment.objects.filter(
+            Q(payment_status='pending') | Q(is_verified=False),
+            payment_date__year=month_date.year,
+            payment_date__month=month_date.month
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        monthly_reconciliation.append({
+            'month': month_date.strftime('%B %Y'),
+            'matched': float(month_matched),
+            'unmatched': float(month_unmatched),
+            'total': float(month_matched) + float(month_unmatched)
+        })
+    monthly_reconciliation.reverse()
+
+    # Reconciliation rate
+    reconciliation_rate = 0.0
+    if total_payments > 0:
+        reconciliation_rate = (matched_count / total_payments) * 100
+
+    context = {
+        'total_payments': total_payments,
+        'matched_count': matched_count,
+        'matched_amount': float(matched_amount),
+        'unmatched_count': unmatched_count,
+        'unmatched_amount': float(unmatched_amount),
+        'discrepancy_count': discrepancy_count,
+        'discrepancy_amount': float(discrepancy_amount),
+        'reconciliation_rate': reconciliation_rate,
+        'recent_unmatched': recent_unmatched,
+        'payment_methods_stats': payment_methods_stats,
+        'monthly_reconciliation': monthly_reconciliation,
+    }
+
+    return render(request, 'finance/reconciliation.html', context)
+
+
+@login_required
+def reconciliation_auto_match(request):
+    """Auto-match payments with orders/invoices."""
+    if request.method == 'POST':
+        # Get unmatched payments
+        unmatched = Payment.objects.filter(
+            Q(payment_status='pending') | Q(is_verified=False)
+        )
+
+        matched_count = 0
+        for payment in unmatched:
+            # Try to auto-match based on amount and date
+            if payment.order and payment.amount:
+                # If payment has order and amount matches expected, mark as verified
+                expected_amount = payment.order.total_price
+                if abs(float(payment.amount) - float(expected_amount)) < 0.01:
+                    payment.is_verified = True
+                    payment.verified_at = timezone.now()
+                    payment.verified_by = request.user
+                    payment.notes = payment.notes + f"\nAuto-matched on {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+                    payment.save()
+                    matched_count += 1
+
+        messages.success(request, f'Auto-matching complete. {matched_count} payments matched.')
+        return redirect('finance:reconciliation')
+
+    return redirect('finance:reconciliation')

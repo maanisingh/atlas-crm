@@ -44,4 +44,10 @@ urlpatterns = [
     path('manager/pending-confirmations/', views.manager_pending_confirmations, name='manager_pending_confirmations'),
     path('manager/confirm-delivery/<uuid:delivery_id>/', views.manager_confirm_delivery, name='manager_confirm_delivery'),
     path('manager/returned-orders/', views.manager_returned_orders, name='manager_returned_orders'),
+
+    # Couriers Management
+    path('couriers/', views.couriers_list, name='couriers'),
+    path('couriers/<int:courier_id>/', views.courier_detail, name='courier_detail'),
+    path('couriers/<int:courier_id>/edit/', views.edit_courier, name='edit_courier'),
+    path('couriers/<int:courier_id>/performance/', views.courier_performance, name='courier_performance'),
 ]

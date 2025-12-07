@@ -24,4 +24,11 @@ def pending_approvals_count(user):
     """Return the count of pending approvals for admin users."""
     if user.has_role_admin or user.is_superuser:
         return User.objects.filter(approval_status='pending').count()
-    return 0 
+    return 0
+
+@register.filter
+def get_item(dictionary, key):
+    """Get item from dictionary by key"""
+    if dictionary is None:
+        return 0
+    return dictionary.get(key, 0) 

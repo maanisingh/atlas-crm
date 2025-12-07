@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delivery Couriers{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-motorcycle text-yellow-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-semibold text-yellow-600">Delivery Couriers</h1>
+                        <p class="mt-1 text-sm text-gray-500">Manage delivery personnel</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Total Couriers</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_couriers }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-user-check text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Active Couriers</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.active_couriers }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-thumbs-up text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Available Now</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.available_couriers }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-truck text-orange-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">On Delivery</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.on_delivery }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
+            <form method="GET" class="flex flex-wrap gap-4 items-center">
+                <div>
+                    <select name="status" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        <option value="">All Status</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="suspended" {% if current_status == 'suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+                <div>
+                    <select name="company" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        <option value="">All Companies</option>
+                        {% for company in companies %}
+                            <option value="{{ company.id }}" {% if current_company == company.id|stringformat:"s" %}selected{% endif %}>
+                                {{ company.name_en }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <select name="availability" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        <option value="">All Availability</option>
+                        <option value="available" {% if current_availability == 'available' %}selected{% endif %}>Available</option>
+                        <option value="on_delivery" {% if current_availability == 'on_delivery' %}selected{% endif %}>On Delivery</option>
+                        <option value="offline" {% if current_availability == 'offline' %}selected{% endif %}>Offline</option>
+                    </select>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </form>
+        </div>
+
+        <!-- Couriers Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for courier in couriers %}
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <span class="text-xl font-bold text-yellow-600">
+                                {{ courier.user.first_name|slice:":1" }}{{ courier.user.last_name|slice:":1" }}
+                            </span>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">{{ courier.user.get_full_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ courier.employee_id }}</p>
+                        </div>
+                        {% if courier.status == 'active' %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                Active
+                            </span>
+                        {% elif courier.status == 'inactive' %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                Inactive
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                {{ courier.status|title }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Courier Info -->
+                    <div class="space-y-2 mb-4 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Company</span>
+                            <span class="font-medium">{{ courier.delivery_company.name_en|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Phone</span>
+                            <span class="font-medium">{{ courier.phone_number|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Availability</span>
+                            {% if courier.availability == 'available' %}
+                                <span class="text-green-600 font-medium">Available</span>
+                            {% elif courier.availability == 'on_delivery' %}
+                                <span class="text-orange-600 font-medium">On Delivery</span>
+                            {% else %}
+                                <span class="text-gray-600 font-medium">Offline</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <p class="text-xs text-gray-500">Total</p>
+                            <p class="text-lg font-bold text-gray-900">{{ courier.order_count }}</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-2">
+                            <p class="text-xs text-gray-500">Delivered</p>
+                            <p class="text-lg font-bold text-green-600">{{ courier.completed_count }}</p>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-2">
+                            <p class="text-xs text-gray-500">Pending</p>
+                            <p class="text-lg font-bold text-yellow-600">{{ courier.pending_count }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'delivery:courier_detail' courier.id %}"
+                           class="flex-1 text-center px-3 py-2 bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 text-sm">
+                            <i class="fas fa-eye mr-1"></i>Details
+                        </a>
+                        <a href="{% url 'delivery:courier_performance' courier.id %}"
+                           class="flex-1 text-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm">
+                            <i class="fas fa-chart-line mr-1"></i>Performance
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 bg-white rounded-lg border border-gray-200 shadow-sm p-12 text-center">
+                <i class="fas fa-motorcycle text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-500">No couriers found</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

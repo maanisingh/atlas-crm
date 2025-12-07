@@ -1474,3 +1474,221 @@ INFO 2025-12-04 11:54:50,594 apps 2967036 126544910200960 AXES: BEGIN version 8.
 INFO 2025-12-04 11:54:50,594 apps 2967038 126544910200960 AXES: BEGIN version 8.0.0, blocking by ip_address
 INFO 2025-12-04 11:54:50,611 apps 2967040 126544910200960 AXES: BEGIN version 8.0.0, blocking by ip_address
 INFO 2025-12-05 02:01:22,715 apps 3806265 130342932914304 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-06 13:10:40,961 apps 58434 139321912483968 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-06 13:10:40,965 apps 58430 139321912483968 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-06 13:10:40,965 apps 58452 139321912483968 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-06 13:11:35,084 database 58430 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:11:35,086 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:11:34.787320+00:00
+WARNING 2025-12-06 13:11:35,092 database 58430 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:11:46,748 database 58430 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:11:46,749 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:11:46.405858+00:00
+WARNING 2025-12-06 13:11:46,753 database 58430 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:11:48,942 database 58452 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:11:48,944 database 58452 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:11:48.615203+00:00
+WARNING 2025-12-06 13:11:48,948 database 58452 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:14:37,325 apps 83195 126806705864832 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-06 13:14:44,853 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:14:44,855 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:14:44.723354+00:00
+INFO 2025-12-06 13:14:44,863 database 58434 139321912483968 AXES: Reset 3 access attempts from database.
+INFO 2025-12-06 13:14:44,863 database 58434 139321912483968 AXES: Deleted 3 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:14:46,464 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:14:46.460659+00:00
+INFO 2025-12-06 13:14:46,465 database 58434 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:14:48,018 database 58452 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:14:48,020 database 58452 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:14:47.885282+00:00
+WARNING 2025-12-06 13:14:48,026 database 58452 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:14:49,467 database 58430 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:14:49,470 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:14:49.315096+00:00
+WARNING 2025-12-06 13:14:49,476 database 58430 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:16:22,880 database 58430 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:16:22,881 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:22.716727+00:00
+INFO 2025-12-06 13:16:22,891 database 58430 139321912483968 AXES: Reset 2 access attempts from database.
+INFO 2025-12-06 13:16:22,891 database 58430 139321912483968 AXES: Deleted 2 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:16:29,908 database 58452 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:29.905724+00:00
+INFO 2025-12-06 13:16:29,908 database 58452 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:16:31,424 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:16:31,425 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:31.276782+00:00
+INFO 2025-12-06 13:16:31,429 database 58434 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:16:31,430 database 58434 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:16:32,895 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:32.891251+00:00
+INFO 2025-12-06 13:16:32,896 database 58430 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:16:34,424 database 58430 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:16:34,426 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:34.293625+00:00
+WARNING 2025-12-06 13:16:34,431 database 58430 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:16:35,870 database 58434 139321912483968 AXES: User login failed, running database handler for failure.
+INFO 2025-12-06 13:16:35,872 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:16:35.746074+00:00
+WARNING 2025-12-06 13:16:35,876 database 58434 139321912483968 AXES: New login failure by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}. Created new record in the database.
+INFO 2025-12-06 13:23:04,979 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:23:04,981 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:23:04.832848+00:00
+INFO 2025-12-06 13:23:04,989 database 58434 139321912483968 AXES: Reset 2 access attempts from database.
+INFO 2025-12-06 13:23:04,989 database 58434 139321912483968 AXES: Deleted 2 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:23:12,022 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:23:12.018493+00:00
+INFO 2025-12-06 13:23:12,023 database 58430 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:23:13,562 database 58430 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:23:13,564 database 58430 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:23:13.416154+00:00
+INFO 2025-12-06 13:23:13,568 database 58430 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:23:13,568 database 58430 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:23:15,005 database 58452 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:23:15.002349+00:00
+INFO 2025-12-06 13:23:15,005 database 58452 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+WARNING 2025-12-06 13:23:27,228 log 58452 139321912483968 Forbidden (Referer checking failed - no Referer.): /users/login/
+INFO 2025-12-06 13:27:56,886 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:27:56,887 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:27:56.741141+00:00
+INFO 2025-12-06 13:27:56,893 database 58434 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:27:56,893 database 58434 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:28:03,626 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:28:03.622154+00:00
+INFO 2025-12-06 13:28:03,626 database 58434 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:28:05,193 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:28:05,195 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:28:05.034098+00:00
+INFO 2025-12-06 13:28:05,200 database 58434 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:28:05,201 database 58434 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:34:41,887 database 58452 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:34:41,889 database 58452 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:34:41.736429+00:00
+INFO 2025-12-06 13:34:41,895 database 58452 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:34:41,896 database 58452 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-06 13:34:43,253 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:34:43.249721+00:00
+INFO 2025-12-06 13:34:43,253 database 58434 139321912483968 AXES: Successful logout by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/logout/"}.
+INFO 2025-12-06 13:34:46,453 database 58434 139321912483968 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"}.
+INFO 2025-12-06 13:34:46,455 database 58434 139321912483968 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-06 18:34:46.300153+00:00
+INFO 2025-12-06 13:34:46,460 database 58434 139321912483968 AXES: Reset 0 access attempts from database.
+INFO 2025-12-06 13:34:46,460 database 58434 139321912483968 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36", path_info: "/users/login/"} from database.
+INFO 2025-12-07 06:28:17,368 apps 2287409 138431463645312 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:28:17,440 database 2287409 138431463645312 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:28:17,445 database 2287409 138431463645312 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:28:17.439763+00:00
+INFO 2025-12-07 06:28:17,451 database 2287409 138431463645312 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:28:17,451 database 2287409 138431463645312 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+ERROR 2025-12-07 06:28:17,611 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2025-12-07 06:28:17,619 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2025-12-07 06:28:17,622 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2025-12-07 06:28:17,625 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2025-12-07 06:28:17,628 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2025-12-07 06:28:17,630 log 2287409 138431463645312 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/new-python-code/venv/lib/python3.12/site-packages/django/http/request.py", line 202, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+INFO 2025-12-07 06:29:38,482 apps 2295557 135480068051072 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:29:38,547 database 2295557 135480068051072 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:29:38,551 database 2295557 135480068051072 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:29:38.545641+00:00
+INFO 2025-12-07 06:29:38,558 database 2295557 135480068051072 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:29:38,558 database 2295557 135480068051072 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 06:30:48,005 apps 2302738 132768839299200 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:30:48,079 database 2302738 132768839299200 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:30:48,081 database 2302738 132768839299200 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:30:48.077813+00:00
+INFO 2025-12-07 06:30:48,086 database 2302738 132768839299200 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:30:48,086 database 2302738 132768839299200 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 06:35:52,015 apps 2334968 130247623127168 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:36:03,293 apps 2336525 130792169861248 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:36:10,188 apps 2337171 125234082074752 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:36:28,415 apps 2339132 127794136416384 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:36:28,497 apps 2339150 127794136416384 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:36:28,533 apps 2339154 127794136416384 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:38:17,328 apps 2350301 129888552071296 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:38:17,369 database 2350301 129888552071296 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:38:17,371 database 2350301 129888552071296 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:38:17.369282+00:00
+INFO 2025-12-07 06:38:17,375 database 2350301 129888552071296 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:38:17,375 database 2350301 129888552071296 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 06:41:10,031 apps 2370140 124777407938688 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:49:03,837 apps 2419990 136431981650048 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:49:03,892 database 2419990 136431981650048 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:49:03,897 database 2419990 136431981650048 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:49:03.891220+00:00
+INFO 2025-12-07 06:49:03,903 database 2419990 136431981650048 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:49:03,903 database 2419990 136431981650048 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 06:49:10,933 apps 2420812 136668103430272 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:51:17,886 apps 2433997 137331000987776 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:52:13,769 apps 2439667 140284848443520 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:52:13,843 database 2439667 140284848443520 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 06:52:13,848 database 2439667 140284848443520 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 11:52:13.842588+00:00
+INFO 2025-12-07 06:52:13,853 database 2439667 140284848443520 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 06:52:13,853 database 2439667 140284848443520 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 06:52:22,802 apps 2440602 123380230656128 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:54:12,846 apps 2452199 128936914362496 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 06:56:17,421 apps 2465051 127737705701504 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:00:16,017 apps 2489818 137885032968320 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:00:16,087 database 2489818 137885032968320 AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2025-12-07 07:00:16,092 database 2489818 137885032968320 AXES: Cleaned up 0 expired access attempts from database that were older than 2025-12-07 12:00:16.085813+00:00
+INFO 2025-12-07 07:00:16,099 database 2489818 137885032968320 AXES: Reset 0 access attempts from database.
+INFO 2025-12-07 07:00:16,099 database 2489818 137885032968320 AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2025-12-07 07:10:22,115 apps 2552821 125777037713536 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:14:05,305 apps 2576144 126137633386624 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:26:04,581 apps 2650845 132776039387264 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:28:33,387 apps 2666345 137236437037184 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:31:07,547 apps 2682269 133199145169024 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:32:52,472 apps 2693206 123529416097920 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:33:58,128 apps 2700166 134078888108160 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:34:07,506 apps 2701071 125688305332352 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:34:27,899 apps 2703682 127429893152896 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:34:27,986 apps 2703689 127429893152896 AXES: BEGIN version 8.0.0, blocking by ip_address
+INFO 2025-12-07 07:34:27,990 apps 2703690 127429893152896 AXES: BEGIN version 8.0.0, blocking by ip_address

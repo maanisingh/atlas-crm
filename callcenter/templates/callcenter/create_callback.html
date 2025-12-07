@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule Callback{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <a href="{% url 'callcenter:callbacks' %}" class="mr-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-calendar-plus text-orange-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-orange-600">Schedule Callback</h1>
+                    <p class="mt-1 text-sm text-gray-500">Create a new follow-up call</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <!-- Order Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Order</label>
+                        <select name="order_id" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="">Choose an order...</option>
+                            {% for order in orders %}
+                                <option value="{{ order.id }}">
+                                    #{{ order.id }} - {{ order.customer.get_full_name|default:"Unknown" }}
+                                    ({{ order.customer_phone|default:"No phone" }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Follow-up Date -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Follow-up Date & Time</label>
+                        <input type="datetime-local" name="followup_date" required
+                               class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                        <textarea name="notes" rows="4"
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2"
+                                  placeholder="Enter callback notes or instructions..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <a href="{% url 'callcenter:callbacks' %}"
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700">
+                        <i class="fas fa-calendar-check mr-2"></i>Schedule Callback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

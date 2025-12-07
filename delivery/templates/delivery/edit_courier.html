@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Courier - {{ courier.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <div class="bg-gray-50 border-b border-gray-300">
+        <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center">
+                <a href="{% url 'delivery:courier_detail' courier.id %}" class="mr-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-user-edit text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-yellow-600">Edit Courier</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ courier.user.get_full_name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <!-- Phone Number -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="text" name="phone_number" value="{{ courier.phone_number|default:'' }}"
+                               class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select name="status" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="active" {% if courier.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if courier.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="suspended" {% if courier.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                        </select>
+                    </div>
+
+                    <!-- Availability -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                        <select name="availability" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="available" {% if courier.availability == 'available' %}selected{% endif %}>Available</option>
+                            <option value="on_delivery" {% if courier.availability == 'on_delivery' %}selected{% endif %}>On Delivery</option>
+                            <option value="offline" {% if courier.availability == 'offline' %}selected{% endif %}>Offline</option>
+                        </select>
+                    </div>
+
+                    <!-- Delivery Company -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Company</label>
+                        <select name="delivery_company" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="">Select a company...</option>
+                            {% for company in companies %}
+                                <option value="{{ company.id }}" {% if courier.delivery_company_id == company.id %}selected{% endif %}>
+                                    {{ company.name_en }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Vehicle Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+                        <select name="vehicle_type" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="">Select vehicle type...</option>
+                            <option value="motorcycle" {% if courier.vehicle_type == 'motorcycle' %}selected{% endif %}>Motorcycle</option>
+                            <option value="car" {% if courier.vehicle_type == 'car' %}selected{% endif %}>Car</option>
+                            <option value="van" {% if courier.vehicle_type == 'van' %}selected{% endif %}>Van</option>
+                            <option value="bicycle" {% if courier.vehicle_type == 'bicycle' %}selected{% endif %}>Bicycle</option>
+                            <option value="scooter" {% if courier.vehicle_type == 'scooter' %}selected{% endif %}>Scooter</option>
+                        </select>
+                    </div>
+
+                    <!-- License Number -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">License Number</label>
+                        <input type="text" name="license_number" value="{{ courier.license_number|default:'' }}"
+                               class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <a href="{% url 'delivery:courier_detail' courier.id %}"
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

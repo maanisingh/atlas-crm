@@ -1392,3 +1392,256 @@ def product_detail(request, product_id):
     }
     
     return render(request, 'inventory/product_detail.html', context)
+
+
+# ============= Stock Alerts Views =============
+
+@login_required
+def stock_alerts(request):
+    """Stock alerts management page."""
+    from django.core.paginator import Paginator
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    severity_filter = request.GET.get('severity', '')
+
+    # Get all products with their stock levels
+    products = Product.objects.all()
+
+    alerts = []
+    for product in products:
+        # Get stock settings
+        stock_settings = Stock.objects.filter(product=product).first()
+        min_quantity = stock_settings.min_quantity if stock_settings else 10
+        reorder_quantity = stock_settings.reorder_quantity if stock_settings else 50
+
+        # Get current stock
+        current_stock = InventoryRecord.objects.filter(product=product).aggregate(total=Sum('quantity'))['total'] or 0
+
+        # Determine alert severity
+        severity = None
+        if current_stock == 0:
+            severity = 'critical'
+        elif current_stock <= min_quantity:
+            severity = 'high'
+        elif current_stock <= reorder_quantity:
+            severity = 'medium'
+
+        if severity:
+            # Apply severity filter
+            if severity_filter and severity != severity_filter:
+                continue
+
+            alerts.append({
+                'product': product,
+                'current_stock': current_stock,
+                'min_quantity': min_quantity,
+                'reorder_quantity': reorder_quantity,
+                'severity': severity,
+                'deficit': min_quantity - current_stock if current_stock < min_quantity else 0,
+            })
+
+    # Sort by severity
+    severity_order = {'critical': 0, 'high': 1, 'medium': 2}
+    alerts.sort(key=lambda x: severity_order.get(x['severity'], 3))
+
+    # Pagination
+    paginator = Paginator(alerts, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    critical_count = len([a for a in alerts if a['severity'] == 'critical'])
+    high_count = len([a for a in alerts if a['severity'] == 'high'])
+    medium_count = len([a for a in alerts if a['severity'] == 'medium'])
+
+    context = {
+        'page_obj': page_obj,
+        'critical_count': critical_count,
+        'high_count': high_count,
+        'medium_count': medium_count,
+        'total_alerts': len(alerts),
+        'current_severity': severity_filter,
+    }
+
+    return render(request, 'inventory/stock_alerts.html', context)
+
+
+@login_required
+def acknowledge_alert(request, alert_id):
+    """Acknowledge a stock alert (redirect to product for action)."""
+    product = get_object_or_404(Product, id=alert_id)
+    messages.info(request, f'Stock alert for "{product.name_en}" acknowledged. Please take appropriate action.')
+    return redirect('inventory:product_edit', product_id=product.id)
+
+
+@login_required
+def alert_settings(request):
+    """Configure stock alert settings."""
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        min_quantity = request.POST.get('min_quantity', 10)
+        reorder_quantity = request.POST.get('reorder_quantity', 50)
+        max_quantity = request.POST.get('max_quantity', 1000)
+
+        if product_id:
+            product = get_object_or_404(Product, id=product_id)
+            stock, created = Stock.objects.get_or_create(product=product)
+            stock.min_quantity = int(min_quantity)
+            stock.reorder_quantity = int(reorder_quantity)
+            stock.max_quantity = int(max_quantity)
+            stock.save()
+
+            messages.success(request, f'Alert settings updated for "{product.name_en}".')
+            return redirect('inventory:alerts')
+
+    # Get all products with their stock settings
+    products = Product.objects.all()
+    product_settings = []
+    for product in products:
+        stock = Stock.objects.filter(product=product).first()
+        product_settings.append({
+            'product': product,
+            'min_quantity': stock.min_quantity if stock else 10,
+            'reorder_quantity': stock.reorder_quantity if stock else 50,
+            'max_quantity': stock.max_quantity if stock else 1000,
+        })
+
+    context = {
+        'product_settings': product_settings,
+    }
+
+    return render(request, 'inventory/alert_settings.html', context)
+
+
+# ============= Stock Reservations Views =============
+
+@login_required
+def stock_reservations(request):
+    """Stock reservations management page."""
+    from django.core.paginator import Paginator
+    from orders.models import Order
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    product_filter = request.GET.get('product', '')
+
+    # Get orders that have reserved stock (pending, confirmed, processing)
+    orders_with_reserved_stock = Order.objects.filter(
+        status__in=['pending', 'confirmed', 'processing', 'awaiting_confirmation']
+    ).select_related('product').order_by('-date')
+
+    # Build reservations list
+    reservations = []
+    for order in orders_with_reserved_stock:
+        if order.product:
+            reservations.append({
+                'order': order,
+                'product': order.product,
+                'quantity': order.quantity,
+                'reserved_at': order.date,
+                'status': order.status,
+                'customer': order.customer,
+            })
+
+    # Apply product filter
+    if product_filter:
+        reservations = [r for r in reservations if str(r['product'].id) == product_filter]
+
+    # Pagination
+    paginator = Paginator(reservations, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_reserved_quantity = sum(r['quantity'] for r in reservations)
+    products_with_reservations = len(set(r['product'].id for r in reservations))
+
+    # Get products for filter dropdown
+    products = Product.objects.filter(id__in=[r['product'].id for r in reservations]).distinct()
+
+    context = {
+        'page_obj': page_obj,
+        'total_reserved': len(reservations),
+        'total_reserved_quantity': total_reserved_quantity,
+        'products_with_reservations': products_with_reservations,
+        'products': products,
+        'current_product': product_filter,
+    }
+
+    return render(request, 'inventory/stock_reservations.html', context)
+
+
+@login_required
+def create_reservation(request):
+    """Create a manual stock reservation."""
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        quantity = request.POST.get('quantity', 1)
+        reason = request.POST.get('reason', '')
+
+        try:
+            product = Product.objects.get(id=product_id)
+            qty = int(quantity)
+
+            # Check if sufficient stock available
+            current_stock = InventoryRecord.objects.filter(product=product).aggregate(total=Sum('quantity'))['total'] or 0
+
+            if current_stock >= qty:
+                # Create a movement record for the reservation
+                InventoryMovement.objects.create(
+                    product=product,
+                    movement_type='reserve',
+                    quantity=qty,
+                    created_by=request.user,
+                    reference=f"Manual reservation: {reason}"
+                )
+
+                messages.success(request, f'Reserved {qty} units of "{product.name_en}".')
+            else:
+                messages.error(request, f'Insufficient stock. Available: {current_stock}, Requested: {qty}')
+
+        except Product.DoesNotExist:
+            messages.error(request, 'Product not found.')
+        except Exception as e:
+            messages.error(request, f'Error creating reservation: {str(e)}')
+
+        return redirect('inventory:reservations')
+
+    # Get products for the form
+    products = Product.objects.filter(stock_quantity__gt=0)
+
+    context = {
+        'products': products,
+    }
+
+    return render(request, 'inventory/create_reservation.html', context)
+
+
+@login_required
+def release_reservation(request, reservation_id):
+    """Release a stock reservation."""
+    from orders.models import Order
+
+    # reservation_id is the order ID for orders with reserved stock
+    order = get_object_or_404(Order, id=reservation_id)
+
+    if request.method == 'POST':
+        # Create a movement record for the release
+        if order.product:
+            InventoryMovement.objects.create(
+                product=order.product,
+                movement_type='release',
+                quantity=order.quantity,
+                created_by=request.user,
+                reference=f"Released reservation for order {order.order_code}"
+            )
+
+        messages.success(request, f'Reservation for order {order.order_code} released.')
+        return redirect('inventory:reservations')
+
+    context = {
+        'order': order,
+    }
+
+    return render(request, 'inventory/release_reservation.html', context)

@@ -3630,3 +3630,271 @@ def export_orders_csv(request):
     )
 
     return response
+
+
+# ============================================
+# Callbacks Management Views
+# ============================================
+
+@login_required
+def callbacks_list(request):
+    """List all scheduled callbacks"""
+    from orders.models import Order
+
+    # Get callbacks (orders marked for follow-up)
+    callbacks = Order.objects.filter(
+        needs_followup=True
+    ).select_related('customer', 'call_center_agent').order_by('followup_date')
+
+    # Filter by status
+    status = request.GET.get('status', '')
+    if status == 'pending':
+        callbacks = callbacks.filter(followup_completed=False)
+    elif status == 'completed':
+        callbacks = callbacks.filter(followup_completed=True)
+    elif status == 'overdue':
+        callbacks = callbacks.filter(
+            followup_completed=False,
+            followup_date__lt=timezone.now()
+        )
+
+    # Filter by agent (for managers)
+    agent_id = request.GET.get('agent', '')
+    if agent_id:
+        callbacks = callbacks.filter(call_center_agent_id=agent_id)
+
+    # For agents, show only their callbacks
+    if hasattr(request.user, 'role') and request.user.role == 'call_center_agent':
+        callbacks = callbacks.filter(call_center_agent=request.user)
+
+    # Statistics
+    stats = {
+        'total': callbacks.count(),
+        'pending': callbacks.filter(followup_completed=False).count(),
+        'completed_today': callbacks.filter(
+            followup_completed=True,
+            updated_at__date=timezone.now().date()
+        ).count(),
+        'overdue': callbacks.filter(
+            followup_completed=False,
+            followup_date__lt=timezone.now()
+        ).count(),
+    }
+
+    # Get agents for filter dropdown
+    agents = User.objects.filter(role='call_center_agent', is_active=True)
+
+    # Pagination
+    paginator = Paginator(callbacks, 20)
+    page = request.GET.get('page', 1)
+    callbacks_page = paginator.get_page(page)
+
+    return render(request, 'callcenter/callbacks_list.html', {
+        'callbacks': callbacks_page,
+        'stats': stats,
+        'agents': agents,
+        'current_status': status,
+        'current_agent': agent_id,
+        'now': timezone.now(),
+    })
+
+
+@login_required
+def create_callback(request):
+    """Create a new callback/follow-up"""
+    from orders.models import Order
+
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        followup_date = request.POST.get('followup_date')
+        followup_notes = request.POST.get('notes', '')
+
+        try:
+            order = Order.objects.get(id=order_id)
+            order.needs_followup = True
+            order.followup_date = followup_date
+            order.followup_notes = followup_notes
+            order.save()
+
+            messages.success(request, f'Callback scheduled for order #{order.id}')
+            return redirect('callcenter:callbacks')
+        except Order.DoesNotExist:
+            messages.error(request, 'Order not found')
+
+    # Get orders that can have callbacks
+    orders = Order.objects.filter(
+        needs_followup=False
+    ).exclude(
+        status__in=['delivered', 'cancelled']
+    ).select_related('customer')[:100]
+
+    return render(request, 'callcenter/create_callback.html', {
+        'orders': orders,
+    })
+
+
+@login_required
+def complete_callback(request, callback_id):
+    """Mark a callback as completed"""
+    from orders.models import Order
+
+    try:
+        order = Order.objects.get(id=callback_id)
+
+        if request.method == 'POST':
+            order.followup_completed = True
+            order.followup_completed_at = timezone.now()
+            order.followup_completed_by = request.user
+
+            # Add call log entry
+            outcome = request.POST.get('outcome', '')
+            notes = request.POST.get('notes', '')
+
+            CallLog.objects.create(
+                order=order,
+                agent=request.user,
+                call_type='followup',
+                outcome=outcome,
+                notes=notes,
+                duration=int(request.POST.get('duration', 0))
+            )
+
+            order.save()
+            messages.success(request, f'Callback for order #{order.id} marked as completed')
+            return redirect('callcenter:callbacks')
+
+        return render(request, 'callcenter/complete_callback.html', {
+            'order': order,
+        })
+    except Order.DoesNotExist:
+        messages.error(request, 'Callback not found')
+        return redirect('callcenter:callbacks')
+
+
+# ============================================
+# Agents Management Views
+# ============================================
+
+@login_required
+def agents_list(request):
+    """List all call center agents"""
+    agents = User.objects.filter(
+        role='call_center_agent'
+    ).annotate(
+        total_orders=Count('assigned_orders'),
+        completed_orders=Count('assigned_orders', filter=Q(assigned_orders__status='delivered')),
+        pending_orders=Count('assigned_orders', filter=Q(assigned_orders__status__in=['pending', 'confirmed'])),
+    ).order_by('-is_active', 'first_name')
+
+    # Filter by status
+    status = request.GET.get('status', '')
+    if status == 'active':
+        agents = agents.filter(is_active=True)
+    elif status == 'inactive':
+        agents = agents.filter(is_active=False)
+
+    # Statistics
+    stats = {
+        'total_agents': agents.count(),
+        'active_agents': agents.filter(is_active=True).count(),
+        'online_agents': agents.filter(is_active=True, last_login__gte=timezone.now() - timedelta(hours=1)).count(),
+    }
+
+    return render(request, 'callcenter/agents_list.html', {
+        'agents': agents,
+        'stats': stats,
+        'current_status': status,
+    })
+
+
+@login_required
+def agent_performance(request, agent_id):
+    """View agent performance metrics"""
+    from orders.models import Order
+
+    agent = get_object_or_404(User, id=agent_id, role='call_center_agent')
+
+    # Date range
+    days = int(request.GET.get('days', 30))
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get orders handled by this agent
+    orders = Order.objects.filter(
+        call_center_agent=agent,
+        created_at__gte=start_date
+    )
+
+    # Performance metrics
+    total_orders = orders.count()
+    confirmed_orders = orders.filter(status__in=['confirmed', 'processing', 'shipped', 'delivered']).count()
+    cancelled_orders = orders.filter(status='cancelled').count()
+
+    confirmation_rate = (confirmed_orders / total_orders * 100) if total_orders > 0 else 0
+
+    # Call logs
+    call_logs = CallLog.objects.filter(
+        agent=agent,
+        created_at__gte=start_date
+    )
+
+    total_calls = call_logs.count()
+    avg_call_duration = call_logs.aggregate(avg=Avg('duration'))['avg'] or 0
+
+    # Daily breakdown
+    from django.db.models.functions import TruncDate
+    daily_stats = orders.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('-date')[:30]
+
+    return render(request, 'callcenter/agent_performance.html', {
+        'agent': agent,
+        'days': days,
+        'total_orders': total_orders,
+        'confirmed_orders': confirmed_orders,
+        'cancelled_orders': cancelled_orders,
+        'confirmation_rate': confirmation_rate,
+        'total_calls': total_calls,
+        'avg_call_duration': avg_call_duration,
+        'daily_stats': daily_stats,
+    })
+
+
+@login_required
+def agent_schedule(request, agent_id):
+    """View and manage agent schedule"""
+    agent = get_object_or_404(User, id=agent_id, role='call_center_agent')
+
+    if request.method == 'POST':
+        # Update schedule
+        schedule_data = {
+            'monday': request.POST.get('monday', ''),
+            'tuesday': request.POST.get('tuesday', ''),
+            'wednesday': request.POST.get('wednesday', ''),
+            'thursday': request.POST.get('thursday', ''),
+            'friday': request.POST.get('friday', ''),
+            'saturday': request.POST.get('saturday', ''),
+            'sunday': request.POST.get('sunday', ''),
+        }
+
+        # Store schedule in user profile or separate model
+        # For now, store in session or a simple field
+        agent.schedule_json = json.dumps(schedule_data)
+        agent.save()
+
+        messages.success(request, f'Schedule updated for {agent.get_full_name()}')
+        return redirect('callcenter:agents')
+
+    # Get current schedule
+    schedule = {}
+    if hasattr(agent, 'schedule_json') and agent.schedule_json:
+        try:
+            schedule = json.loads(agent.schedule_json)
+        except:
+            schedule = {}
+
+    return render(request, 'callcenter/agent_schedule.html', {
+        'agent': agent,
+        'schedule': schedule,
+    })

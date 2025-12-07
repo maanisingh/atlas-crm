@@ -29,4 +29,14 @@ urlpatterns = [
     
     # Reports
     path('reports/', views.inventory_movements, name='reports'),
+
+    # Stock Alerts
+    path('alerts/', views.stock_alerts, name='alerts'),
+    path('alerts/<int:alert_id>/acknowledge/', views.acknowledge_alert, name='acknowledge_alert'),
+    path('alerts/settings/', views.alert_settings, name='alert_settings'),
+
+    # Stock Reservations
+    path('reservations/', views.stock_reservations, name='reservations'),
+    path('reservations/create/', views.create_reservation, name='create_reservation'),
+    path('reservations/<int:reservation_id>/release/', views.release_reservation, name='release_reservation'),
 ]

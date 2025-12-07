@@ -2619,3 +2619,178 @@ def manager_returned_orders(request):
     }
     
     return render(request, 'delivery/manager/returned_orders.html', context)
+
+
+# ============================================
+# Couriers Management Views
+# ============================================
+
+@login_required
+def couriers_list(request):
+    """List all delivery couriers"""
+    couriers = Courier.objects.select_related(
+        'user', 'delivery_company'
+    ).annotate(
+        order_count=Count('deliveries'),
+        completed_count=Count('deliveries', filter=Q(deliveries__status='delivered')),
+        pending_count=Count('deliveries', filter=Q(deliveries__status__in=['assigned', 'picked_up', 'out_for_delivery'])),
+    ).order_by('-status', 'user__first_name')
+
+    # Filter by status
+    status = request.GET.get('status', '')
+    if status:
+        couriers = couriers.filter(status=status)
+
+    # Filter by company
+    company_id = request.GET.get('company', '')
+    if company_id:
+        couriers = couriers.filter(delivery_company_id=company_id)
+
+    # Filter by availability
+    availability = request.GET.get('availability', '')
+    if availability:
+        couriers = couriers.filter(availability=availability)
+
+    # Statistics
+    stats = {
+        'total_couriers': Courier.objects.count(),
+        'active_couriers': Courier.objects.filter(status='active').count(),
+        'available_couriers': Courier.objects.filter(status='active', availability='available').count(),
+        'on_delivery': Courier.objects.filter(availability='on_delivery').count(),
+    }
+
+    # Get companies for filter
+    companies = DeliveryCompany.objects.filter(is_active=True)
+
+    return render(request, 'delivery/couriers_list.html', {
+        'couriers': couriers,
+        'stats': stats,
+        'companies': companies,
+        'current_status': status,
+        'current_company': company_id,
+        'current_availability': availability,
+    })
+
+
+@login_required
+def courier_detail(request, courier_id):
+    """View courier details"""
+    courier = get_object_or_404(
+        Courier.objects.select_related('user', 'delivery_company'),
+        id=courier_id
+    )
+
+    # Get recent deliveries
+    recent_deliveries = DeliveryRecord.objects.filter(
+        courier=courier
+    ).select_related('order').order_by('-assigned_at')[:20]
+
+    # Get delivery statistics
+    total_deliveries = DeliveryRecord.objects.filter(courier=courier).count()
+    completed_deliveries = DeliveryRecord.objects.filter(courier=courier, status='delivered').count()
+    failed_deliveries = DeliveryRecord.objects.filter(courier=courier, status='failed').count()
+
+    success_rate = (completed_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0
+
+    return render(request, 'delivery/courier_detail.html', {
+        'courier': courier,
+        'recent_deliveries': recent_deliveries,
+        'total_deliveries': total_deliveries,
+        'completed_deliveries': completed_deliveries,
+        'failed_deliveries': failed_deliveries,
+        'success_rate': success_rate,
+    })
+
+
+@login_required
+def edit_courier(request, courier_id):
+    """Edit courier details"""
+    courier = get_object_or_404(Courier, id=courier_id)
+
+    if request.method == 'POST':
+        # Update courier details
+        courier.phone_number = request.POST.get('phone_number', courier.phone_number)
+        courier.status = request.POST.get('status', courier.status)
+        courier.availability = request.POST.get('availability', courier.availability)
+        courier.vehicle_type = request.POST.get('vehicle_type', courier.vehicle_type)
+        courier.license_number = request.POST.get('license_number', courier.license_number)
+
+        company_id = request.POST.get('delivery_company')
+        if company_id:
+            try:
+                courier.delivery_company = DeliveryCompany.objects.get(id=company_id)
+            except DeliveryCompany.DoesNotExist:
+                pass
+
+        courier.save()
+        messages.success(request, f'Courier {courier.user.get_full_name()} updated successfully')
+        return redirect('delivery:courier_detail', courier_id=courier.id)
+
+    companies = DeliveryCompany.objects.filter(is_active=True)
+
+    return render(request, 'delivery/edit_courier.html', {
+        'courier': courier,
+        'companies': companies,
+    })
+
+
+@login_required
+def courier_performance(request, courier_id):
+    """View courier performance metrics"""
+    courier = get_object_or_404(Courier.objects.select_related('user'), id=courier_id)
+
+    # Date range
+    days = int(request.GET.get('days', 30))
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get deliveries in date range
+    deliveries = DeliveryRecord.objects.filter(
+        courier=courier,
+        assigned_at__gte=start_date
+    )
+
+    # Performance metrics
+    total_deliveries = deliveries.count()
+    completed = deliveries.filter(status='delivered').count()
+    failed = deliveries.filter(status='failed').count()
+    pending = deliveries.filter(status__in=['assigned', 'picked_up', 'out_for_delivery']).count()
+
+    success_rate = (completed / total_deliveries * 100) if total_deliveries > 0 else 0
+
+    # Average delivery time
+    completed_deliveries = deliveries.filter(
+        status='delivered',
+        delivered_at__isnull=False,
+        assigned_at__isnull=False
+    )
+
+    avg_delivery_time = None
+    if completed_deliveries.exists():
+        total_time = sum(
+            (d.delivered_at - d.assigned_at).total_seconds()
+            for d in completed_deliveries
+            if d.delivered_at and d.assigned_at
+        )
+        if completed_deliveries.count() > 0:
+            avg_delivery_time = total_time / completed_deliveries.count() / 3600  # Convert to hours
+
+    # Daily breakdown
+    from django.db.models.functions import TruncDate
+    daily_stats = deliveries.annotate(
+        date=TruncDate('assigned_at')
+    ).values('date').annotate(
+        count=Count('id'),
+        delivered=Count('id', filter=Q(status='delivered'))
+    ).order_by('-date')[:30]
+
+    return render(request, 'delivery/courier_performance.html', {
+        'courier': courier,
+        'days': days,
+        'total_deliveries': total_deliveries,
+        'completed': completed,
+        'failed': failed,
+        'pending': pending,
+        'success_rate': success_rate,
+        'avg_delivery_time': avg_delivery_time,
+        'daily_stats': daily_stats,
+    })
