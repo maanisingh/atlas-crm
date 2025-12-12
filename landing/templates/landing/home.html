@@ -6,86 +6,126 @@
 
 {% block extra_css %}
 <style>
-    /* DHL/Aramex inspired design */
+    /* Modern Professional Design */
     .hero-gradient {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .service-card {
         transition: all 0.3s ease;
         border: 2px solid transparent;
     }
-    
+
     .service-card:hover {
         transform: translateY(-5px);
-        border-color: #FFD700;
-        box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
+        border-color: #6366f1;
+        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
     }
-    
+
     .tracking-input {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
     }
-    
+
     .stats-card {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .floating-element {
         animation: float 6s ease-in-out infinite;
     }
-    
+
     @keyframes float {
         0%, 100% { transform: translateY(0px); }
         50% { transform: translateY(-20px); }
     }
-    
+
     .pulse-glow {
         animation: pulse-glow 2s ease-in-out infinite alternate;
     }
-    
+
     @keyframes pulse-glow {
-        from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
-        to { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+        from { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+        to { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section - DHL Style -->
-<section class="hero-gradient text-white py-20 relative overflow-hidden">
-    <!-- Background Elements -->
-    <div class="absolute inset-0">
-        <div class="absolute top-10 {% if LANGUAGE_CODE == 'ar' %}right-10{% else %}left-10{% endif %} w-32 h-32 bg-white opacity-10 rounded-full floating-element"></div>
-        <div class="absolute top-32 {% if LANGUAGE_CODE == 'ar' %}left-20{% else %}right-20{% endif %} w-24 h-24 bg-white opacity-15 rounded-full floating-element" style="animation-delay: 2s;"></div>
-        <div class="absolute bottom-20 {% if LANGUAGE_CODE == 'ar' %}right-1/4{% else %}left-1/4{% endif %} w-16 h-16 bg-white opacity-20 rounded-full floating-element" style="animation-delay: 4s;"></div>
+<!-- Hero Section - Modern with Particles -->
+<section class="hero-gradient text-white py-20 relative overflow-hidden min-h-[90vh] flex items-center">
+    <!-- Particles.js Background -->
+    <div id="particles-js" class="absolute inset-0 z-0"></div>
+
+    <!-- Animated Gradient Orbs -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 {% if LANGUAGE_CODE == 'ar' %}right-10{% else %}left-10{% endif %} w-72 h-72 bg-purple-400 opacity-20 rounded-full blur-3xl floating-element"></div>
+        <div class="absolute top-32 {% if LANGUAGE_CODE == 'ar' %}left-20{% else %}right-20{% endif %} w-96 h-96 bg-indigo-400 opacity-15 rounded-full blur-3xl floating-element" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-20 {% if LANGUAGE_CODE == 'ar' %}right-1/4{% else %}left-1/4{% endif %} w-64 h-64 bg-pink-400 opacity-20 rounded-full blur-3xl floating-element" style="animation-delay: 4s;"></div>
     </div>
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center {% if LANGUAGE_CODE == 'ar' %}lg:grid-flow-col-dense{% endif %}">
-            <!-- Dashboard Image -->
-            <div class="flex justify-center {% if LANGUAGE_CODE == 'ar' %}lg:justify-start lg:order-2{% else %}lg:justify-end{% endif %}">
-                <div class="w-full max-w-lg">
-                    <img src="{% static 'img/seller_dashboard.png' %}" alt="{% trans 'Seller Dashboard' %}" class="w-full h-auto rounded-lg shadow-2xl">
+            <!-- Dashboard Image with Glow -->
+            <div class="flex justify-center {% if LANGUAGE_CODE == 'ar' %}lg:justify-start lg:order-2{% else %}lg:justify-end{% endif %}" data-aos="fade-{% if LANGUAGE_CODE == 'ar' %}right{% else %}left{% endif %}" data-aos-delay="200">
+                <div class="w-full max-w-lg relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur-2xl opacity-30 transform scale-105"></div>
+                    <img src="{% static 'img/seller_dashboard.png' %}" alt="{% trans 'Seller Dashboard' %}" class="w-full h-auto rounded-2xl shadow-2xl relative z-10 glow-effect">
                 </div>
             </div>
-            
+
             <!-- Content -->
-            <div class="text-center {% if LANGUAGE_CODE == 'ar' %}lg:text-right lg:order-1{% else %}lg:text-left{% endif %}">
+            <div class="text-center {% if LANGUAGE_CODE == 'ar' %}lg:text-right lg:order-1{% else %}lg:text-left{% endif %}" data-aos="fade-{% if LANGUAGE_CODE == 'ar' %}left{% else %}right{% endif %}">
+                <!-- Badge -->
+                <div class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full mb-6 backdrop-blur-sm" data-aos="fade-down" data-aos-delay="100">
+                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                    <span class="text-sm text-white/90">{% trans "Global Logistics Platform" %}</span>
+                </div>
+
                 <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-                    {% trans "Track. Ship." %}<br>
-                    <span class="text-yellow-200">{% trans "Deliver." %}</span>
+                    <span id="typed-text"></span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-orange-300">{% trans "Deliver." %}</span>
                 </h1>
-                
-                <p class="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-yellow-100 max-w-2xl mx-auto {% if LANGUAGE_CODE == 'ar' %}lg:mx-0 lg:mr-0{% else %}lg:mx-0{% endif %}">
+
+                <p class="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-white/80 max-w-2xl mx-auto {% if LANGUAGE_CODE == 'ar' %}lg:mx-0 lg:mr-0{% else %}lg:mx-0{% endif %}">
                     {% trans "Your trusted partner for end-to-end logistics, warehousing, and e-commerce fulfillment across the Middle East and beyond." %}
                 </p>
-                
+
                 <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center {% if LANGUAGE_CODE == 'ar' %}lg:justify-end{% else %}lg:justify-start{% endif %}">
-                    <a href="{% url 'landing:services' %}" class="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-white hover:text-orange-600 transition-all duration-300 text-center">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center {% if LANGUAGE_CODE == 'ar' %}lg:justify-end{% else %}lg:justify-start{% endif %}" data-aos="fade-up" data-aos-delay="300">
+                    <a href="/users/register/" class="btn-modern bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-center">
+                        {% trans "Get Started Free" %}
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                    <a href="{% url 'landing:services' %}" class="border-2 border-white/50 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-purple-600 transition-all duration-300 text-center backdrop-blur-sm">
                         {% trans "Our Services" %}
                     </a>
+                </div>
+
+                <!-- Stats Section -->
+                <div class="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/20" data-aos="fade-up" data-aos-delay="400">
+                    <div class="text-center">
+                        <div class="stat-number" id="counter-orders">0</div>
+                        <p class="text-white/70 text-sm mt-1">{% trans "Orders Processed" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number" id="counter-clients">0</div>
+                        <p class="text-white/70 text-sm mt-1">{% trans "Happy Clients" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number" id="counter-countries">0</div>
+                        <p class="text-white/70 text-sm mt-1">{% trans "Countries" %}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -104,156 +144,201 @@
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
             <!-- Global Sourcing -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="100" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg transform transition-transform group-hover:scale-110">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Global Sourcing" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Find the best products worldwide." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "We connect you to verified manufacturers and suppliers, negotiate pricing, and ensure quality-controlled sourcing for your business." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Global Sourcing" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Find the best products worldwide." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "We connect you to verified manufacturers and suppliers, negotiate pricing, and ensure quality-controlled sourcing for your business." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
             
             <!-- Warehousing & Storage -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="150" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Warehousing & Storage" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Secure and scalable storage solutions." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "State-of-the-art facilities with real-time inventory visibility, controlled environments, and efficient stock handling." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Warehousing & Storage" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Secure and scalable storage solutions." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "State-of-the-art facilities with real-time inventory visibility, controlled environments, and efficient stock handling." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Inventory Management -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="200" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Inventory Management" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Stay in control of your stock." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "Automated tracking, stock-level alerts, SKU management, and seamless syncing with your sales channels." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Inventory Management" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Stay in control of your stock." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "Automated tracking, stock-level alerts, SKU management, and seamless syncing with your sales channels." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Order Fulfillment (Pick & Pack) -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="250" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Order Fulfillment" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Fast and accurate order processing." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "From picking and packing to labeling and dispatching, we ensure quick turnaround times to keep your customers satisfied." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Order Fulfillment" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Fast and accurate order processing." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "From picking and packing to labeling and dispatching, we ensure quick turnaround times to keep your customers satisfied." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
             
             <!-- Last-Mile Delivery -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="300" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Last-Mile Delivery" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Reliable delivery across all UAE and soon in Saudi Arabia." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "Optimized shipping routes and trusted courier partnerships for fast, cost-effective, and trackable deliveries." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Last-Mile Delivery" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Reliable delivery across all UAE and soon in Saudi Arabia." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "Optimized shipping routes and trusted courier partnerships for fast, cost-effective, and trackable deliveries." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Cash on Delivery (COD) Remittance -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="350" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Cash on Delivery (COD) Remittance" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Secure and timely COD handling." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "We collect, process, and settle COD payments efficiently through a clear and transparent financial system." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Cash on Delivery (COD) Remittance" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Secure and timely COD handling." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "We collect, process, and settle COD payments efficiently through a clear and transparent financial system." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Customs Clearance -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="400" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Customs Clearance" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Smooth international logistics." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "Our experts handle import/export documentation and ensure compliance with customs regulations to keep your shipments moving." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Customs Clearance" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Smooth international logistics." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "Our experts handle import/export documentation and ensure compliance with customs regulations to keep your shipments moving." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Returns & Reverse Logistics -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="450" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Returns & Reverse Logistics" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Hassle-free returns processing." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "We handle inspections, restocking, refunds coordination, and reporting—making returns easy for you and your customers." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Returns & Reverse Logistics" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Hassle-free returns processing." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "We handle inspections, restocking, refunds coordination, and reporting—making returns easy for you and your customers." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
-            
+
             <!-- Customer Support / Call Center -->
-            <div class="service-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
+            <div class="service-card tilt-card bg-white rounded-xl p-6 sm:p-8 shadow-lg {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %} data-aos="fade-up" data-aos-delay="500" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="tilt-inner">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Customer Support / Call Center" %}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Multi-language customer care." %}</p>
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                        {% trans "Our trained support team manages order inquiries, complaint handling, confirmations, and after-sales assistance." %}
+                    </p>
+                    <a href="{% url 'landing:services' %}" class="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base group">
+                        {% trans "Learn More" %}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{% trans "Customer Support / Call Center" %}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{% trans "Multi-language customer care." %}</p>
-                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                    {% trans "Our trained support team manages order inquiries, complaint handling, confirmations, and after-sales assistance." %}
-                </p>
-                <a href="{% url 'landing:services' %}" class="text-yellow-600 font-semibold hover:text-yellow-700 text-sm sm:text-base">
-                    {% trans "Learn More →" %}
-                </a>
             </div>
         </div>
     </div>
@@ -346,4 +431,382 @@
         </div>
     </div>
 </section>
+
+<!-- How It Works Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-center{% endif %} mb-16" data-aos="fade-up">
+            <span class="text-yellow-500 font-semibold text-sm uppercase tracking-wider mb-2 block">{% trans "How It Works" %}</span>
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{% trans "Simple 4-Step Process" %}</h2>
+            <p class="text-lg text-gray-600 max-w-2xl {% if LANGUAGE_CODE == 'ar' %}mr-auto ml-0{% else %}mx-auto{% endif %}">
+                {% trans "Get started with Atlas Fulfillment in just a few simple steps" %}
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
+            <!-- Connection Line -->
+            <div class="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-yellow-400 via-purple-500 to-yellow-400"></div>
+
+            <!-- Step 1 -->
+            <div class="text-center step-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white relative z-10 shadow-lg pulse-glow">1</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{% trans "Sign Up" %}</h3>
+                <p class="text-gray-600 text-sm">{% trans "Create your free account in less than 2 minutes" %}</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="text-center step-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white relative z-10 shadow-lg">2</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{% trans "Send Products" %}</h3>
+                <p class="text-gray-600 text-sm">{% trans "Ship your inventory to our secure warehouse" %}</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="text-center step-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white relative z-10 shadow-lg">3</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{% trans "We Fulfill" %}</h3>
+                <p class="text-gray-600 text-sm">{% trans "We pick, pack and ship orders for you" %}</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="text-center step-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white relative z-10 shadow-lg">4</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{% trans "Track & Grow" %}</h3>
+                <p class="text-gray-600 text-sm">{% trans "Monitor deliveries and scale your business" %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-center{% endif %} mb-16" data-aos="fade-up">
+            <span class="text-yellow-500 font-semibold text-sm uppercase tracking-wider mb-2 block">{% trans "Testimonials" %}</span>
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{% trans "What Our Clients Say" %}</h2>
+            <p class="text-lg text-gray-600 max-w-2xl {% if LANGUAGE_CODE == 'ar' %}mr-auto ml-0{% else %}mx-auto{% endif %}">
+                {% trans "Join hundreds of businesses that trust Atlas Fulfillment" %}
+            </p>
+        </div>
+
+        <div class="swiper testimonial-swiper" data-aos="fade-up">
+            <div class="swiper-wrapper pb-12">
+                <!-- Testimonial 1 -->
+                <div class="swiper-slide">
+                    <div class="bg-white rounded-2xl p-8 shadow-xl max-w-2xl mx-auto">
+                        <div class="flex items-center mb-4">
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 text-lg mb-6 italic">
+                            "{% trans "Atlas Fulfillment transformed our logistics operations. Their warehouse management and delivery network helped us expand to 5 new cities within 3 months." %}"
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">A</div>
+                            <div class="{% if LANGUAGE_CODE == 'ar' %}mr-4{% else %}ml-4{% endif %}">
+                                <h4 class="font-bold text-gray-900">Ahmed Hassan</h4>
+                                <p class="text-gray-500 text-sm">{% trans "CEO, TechMart UAE" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="swiper-slide">
+                    <div class="bg-white rounded-2xl p-8 shadow-xl max-w-2xl mx-auto">
+                        <div class="flex items-center mb-4">
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 text-lg mb-6 italic">
+                            "{% trans "The COD remittance system is fantastic. We now get our payments faster and the real-time tracking gives us complete visibility over our orders." %}"
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">S</div>
+                            <div class="{% if LANGUAGE_CODE == 'ar' %}mr-4{% else %}ml-4{% endif %}">
+                                <h4 class="font-bold text-gray-900">Sarah Al-Maktoum</h4>
+                                <p class="text-gray-500 text-sm">{% trans "Founder, Fashion Hub" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="swiper-slide">
+                    <div class="bg-white rounded-2xl p-8 shadow-xl max-w-2xl mx-auto">
+                        <div class="flex items-center mb-4">
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 text-lg mb-6 italic">
+                            "{% trans "Their call center team handles our customer inquiries professionally. Customer satisfaction improved by 40% since partnering with Atlas." %}"
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">M</div>
+                            <div class="{% if LANGUAGE_CODE == 'ar' %}mr-4{% else %}ml-4{% endif %}">
+                                <h4 class="font-bold text-gray-900">Mohammed Ali</h4>
+                                <p class="text-gray-500 text-sm">{% trans "Operations Director, E-Shop Dubai" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-center{% endif %} mb-16" data-aos="fade-up">
+            <span class="text-yellow-500 font-semibold text-sm uppercase tracking-wider mb-2 block">{% trans "FAQ" %}</span>
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{% trans "Frequently Asked Questions" %}</h2>
+            <p class="text-lg text-gray-600">
+                {% trans "Got questions? We've got answers." %}
+            </p>
+        </div>
+
+        <div class="space-y-4" data-aos="fade-up" {% if LANGUAGE_CODE == 'ar' %}dir="rtl"{% endif %}>
+            <!-- FAQ Item 1 -->
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}">{% trans "What areas do you deliver to?" %}</span>
+                    <i class="fas fa-chevron-down faq-icon text-yellow-500"></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600">{% trans "We currently deliver across all emirates in the UAE, with plans to expand to Saudi Arabia, Bahrain, Kuwait, and Oman soon. Our network covers major cities and remote areas alike." %}</p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}">{% trans "How does the COD remittance process work?" %}</span>
+                    <i class="fas fa-chevron-down faq-icon text-yellow-500"></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600">{% trans "Once our delivery agents collect COD payments, the funds are processed within 24-48 hours. You can view all transactions in your dashboard and request payouts weekly or monthly to your bank account." %}</p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}">{% trans "What are your warehouse storage fees?" %}</span>
+                    <i class="fas fa-chevron-down faq-icon text-yellow-500"></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600">{% trans "Our warehouse fees depend on the volume and type of products stored. We offer competitive rates starting from just 1 AED per item per month. Contact our sales team for a customized quote based on your specific needs." %}</p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 4 -->
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}">{% trans "Can I integrate my e-commerce platform?" %}</span>
+                    <i class="fas fa-chevron-down faq-icon text-yellow-500"></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600">{% trans "Yes! We support integration with Shopify, WooCommerce, Magento, and custom APIs. Our technical team will help you set up seamless order syncing with your existing platform." %}</p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 5 -->
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span class="{% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}">{% trans "How do you handle returns?" %}</span>
+                    <i class="fas fa-chevron-down faq-icon text-yellow-500"></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600">{% trans "Our returns management system handles the entire process - from customer pickup to inspection, restocking, and reporting. We categorize returned items and provide detailed reports so you can manage your inventory effectively." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Particles.js
+    if (typeof particlesJS !== 'undefined') {
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 50, density: { enable: true, value_area: 800 } },
+                color: { value: '#ffffff' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.3, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#ffffff',
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 1,
+                    direction: 'none',
+                    random: true,
+                    out_mode: 'out'
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'grab' },
+                    resize: true
+                },
+                modes: {
+                    grab: { distance: 140, line_linked: { opacity: 0.5 } }
+                }
+            },
+            retina_detect: true
+        });
+    }
+
+    // Initialize Typed.js
+    if (typeof Typed !== 'undefined') {
+        new Typed('#typed-text', {
+            strings: ['Track.', 'Ship.', 'Source.', 'Store.'],
+            typeSpeed: 100,
+            backSpeed: 50,
+            backDelay: 2000,
+            loop: true,
+            showCursor: true,
+            cursorChar: '|'
+        });
+    }
+
+    // Initialize CountUp.js
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof countUp !== 'undefined' || typeof CountUp !== 'undefined') {
+            const CountUpClass = typeof CountUp !== 'undefined' ? CountUp : window.countUp.CountUp;
+
+            const options = {
+                duration: 2.5,
+                useEasing: true,
+                useGrouping: true,
+                separator: ',',
+                decimal: '.'
+            };
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observerCallback = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+                        const id = target.id;
+                        let endValue = 0;
+                        let suffix = '';
+
+                        if (id === 'counter-orders') { endValue = 50000; suffix = '+'; }
+                        else if (id === 'counter-clients') { endValue = 500; suffix = '+'; }
+                        else if (id === 'counter-countries') { endValue = 15; suffix = ''; }
+
+                        const countUp = new CountUpClass(target, endValue, options);
+                        if (!countUp.error) {
+                            countUp.start(() => {
+                                target.textContent = target.textContent + suffix;
+                            });
+                        }
+                        observer.unobserve(target);
+                    }
+                });
+            };
+
+            const observer = new IntersectionObserver(observerCallback, observerOptions);
+            document.querySelectorAll('[id^="counter-"]').forEach(el => observer.observe(el));
+        }
+    });
+
+    // Initialize Vanilla Tilt for service cards
+    if (typeof VanillaTilt !== 'undefined') {
+        VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
+            max: 10,
+            speed: 400,
+            glare: true,
+            'max-glare': 0.2
+        });
+    }
+
+    // Initialize Swiper for testimonials
+    if (typeof Swiper !== 'undefined') {
+        new Swiper('.testimonial-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 1
+                }
+            }
+        });
+    }
+
+    // FAQ Toggle Function
+    function toggleFaq(element) {
+        const faqItem = element.parentElement;
+        const isActive = faqItem.classList.contains('active');
+
+        // Close all FAQ items
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Open clicked item if it wasn't active
+        if (!isActive) {
+            faqItem.classList.add('active');
+        }
+    }
+
+    // GSAP ScrollTrigger for step cards
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.utils.toArray('.step-card').forEach((card, i) => {
+            gsap.to(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse'
+                },
+                opacity: 1,
+                y: 0,
+                duration: 0.6,
+                delay: i * 0.1
+            });
+        });
+    }
+</script>
 {% endblock %}

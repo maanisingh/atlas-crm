@@ -14,7 +14,7 @@ from roles.models import Role, UserRole
 from .email_utils import send_registration_confirmation_email, send_approval_email, send_rejection_email
 from django_ratelimit.decorators import ratelimit
 
-@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+@ratelimit(key='ip', rate='60/m', method='POST', block=True)
 def login_view(request):
     """Handle user login."""
     if request.user.is_authenticated:
